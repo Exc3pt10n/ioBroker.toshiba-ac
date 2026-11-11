@@ -1,0 +1,45 @@
+{
+  "name": "iobroker.toshiba-ac",
+  "version": "0.1.0",
+  "description": "Control Toshiba air conditioners (Toshiba Home AC Control cloud) with ioBroker",
+  "author": {
+    "name": "Exc3pt10n"
+  },
+  "homepage": "https://github.com/Exc3pt10n/ioBroker.toshiba-ac",
+  "license": "MIT",
+  "keywords": [
+    "ioBroker",
+    "toshiba",
+    "air conditioner",
+    "klimaanlage",
+    "heat pump",
+    "Smart Home",
+    "home automation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Exc3pt10n/ioBroker.toshiba-ac.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Exc3pt10n/ioBroker.toshiba-ac/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "main.js",
+  "files": [
+    "admin/",
+    "lib/",
+    "main.js",
+    "io-package.json",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@iobroker/adapter-core": "^3.2.3",
+    "azure-iot-device": "^1.18.4",
+    "azure-iot-device-mqtt": "^1.16.4"
+  }
+}

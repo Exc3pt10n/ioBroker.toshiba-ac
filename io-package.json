@@ -1,0 +1,103 @@
+{
+  "common": {
+    "name": "toshiba-ac",
+    "version": "0.1.0",
+    "news": {
+      "0.1.0": {
+        "en": "Initial release",
+        "de": "Erste Version"
+      }
+    },
+    "titleLang": {
+      "en": "Toshiba air conditioner",
+      "de": "Toshiba Klimaanlage"
+    },
+    "desc": {
+      "en": "Read and control Toshiba air conditioners via the Toshiba Home AC Control cloud",
+      "de": "Toshiba Klimaanlagen über die Toshiba Home AC Control Cloud auslesen und steuern"
+    },
+    "authors": ["Exc3pt10n"],
+    "keywords": ["toshiba", "air conditioner", "klimaanlage", "climate", "heat pump"],
+    "licenseInformation": {
+      "type": "free",
+      "license": "MIT"
+    },
+    "platform": "Javascript/Node.js",
+    "icon": "toshiba-ac.png",
+    "extIcon": "https://raw.githubusercontent.com/Exc3pt10n/ioBroker.toshiba-ac/main/admin/toshiba-ac.png",
+    "readme": "https://github.com/Exc3pt10n/ioBroker.toshiba-ac/blob/main/README.md",
+    "loglevel": "info",
+    "tier": 2,
+    "mode": "daemon",
+    "type": "climate-control",
+    "compact": true,
+    "connectionType": "cloud",
+    "dataSource": "push",
+    "adminUI": {
+      "config": "json"
+    },
+    "enabled": true,
+    "dependencies": [
+      {
+        "js-controller": ">=5.0.19"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=6.13.16"
+      }
+    ]
+  },
+  "encryptedNative": ["password"],
+  "protectedNative": ["password"],
+  "native": {
+    "username": "",
+    "password": "",
+    "pollInterval": 10,
+    "energyInterval": 30,
+    "useWebsocket": false
+  },
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "info",
+      "type": "channel",
+      "common": {
+        "name": "Information"
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "role": "indicator.connected",
+        "name": {
+          "en": "Connected to Toshiba cloud",
+          "de": "Mit Toshiba Cloud verbunden"
+        },
+        "type": "boolean",
+        "read": true,
+        "write": false,
+        "def": false
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.clientId",
+      "type": "state",
+      "common": {
+        "role": "text",
+        "name": {
+          "en": "Client id used to register at the Toshiba cloud",
+          "de": "Client-ID für die Registrierung an der Toshiba Cloud"
+        },
+        "type": "string",
+        "read": true,
+        "write": false,
+        "def": ""
+      },
+      "native": {}
+    }
+  ]
+}

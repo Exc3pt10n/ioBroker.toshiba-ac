@@ -1,0 +1,109 @@
+{
+  "i18n": false,
+  "type": "panel",
+  "items": {
+    "header": {
+      "type": "header",
+      "text": {
+        "en": "Toshiba Home AC Control account",
+        "de": "Toshiba Home AC Control Konto"
+      },
+      "size": 4,
+      "sm": 12
+    },
+    "hint": {
+      "type": "staticText",
+      "text": {
+        "en": "Use the same e-mail / user name and password as in the 'Toshiba Home AC Control' app.",
+        "de": "Verwende dieselben Zugangsdaten (Benutzername / E-Mail und Passwort) wie in der App 'Toshiba Home AC Control'."
+      },
+      "newLine": true,
+      "sm": 12
+    },
+    "username": {
+      "type": "text",
+      "label": {
+        "en": "User name",
+        "de": "Benutzername"
+      },
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 6,
+      "lg": 4
+    },
+    "password": {
+      "type": "password",
+      "label": {
+        "en": "Password",
+        "de": "Passwort"
+      },
+      "repeat": false,
+      "visible": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 6,
+      "lg": 4
+    },
+    "header2": {
+      "type": "header",
+      "text": {
+        "en": "Options",
+        "de": "Optionen"
+      },
+      "size": 4,
+      "newLine": true,
+      "sm": 12
+    },
+    "pollInterval": {
+      "type": "number",
+      "label": {
+        "en": "State refresh interval (minutes)",
+        "de": "Intervall Zustandsabfrage (Minuten)"
+      },
+      "help": {
+        "en": "Changes are pushed in real time. Polling is only a fallback.",
+        "de": "Änderungen kommen in Echtzeit. Die Abfrage dient nur als Rückfallebene."
+      },
+      "min": 1,
+      "max": 1440,
+      "newLine": true,
+      "xs": 12,
+      "sm": 6,
+      "md": 4,
+      "lg": 3
+    },
+    "energyInterval": {
+      "type": "number",
+      "label": {
+        "en": "Energy consumption refresh (minutes)",
+        "de": "Intervall Energieverbrauch (Minuten)"
+      },
+      "help": {
+        "en": "Only for units supporting energy reporting",
+        "de": "Nur bei Geräten mit Verbrauchsmessung"
+      },
+      "min": 5,
+      "max": 1440,
+      "xs": 12,
+      "sm": 6,
+      "md": 4,
+      "lg": 3
+    },
+    "useWebsocket": {
+      "type": "checkbox",
+      "label": {
+        "en": "Use MQTT over WebSocket (port 443)",
+        "de": "MQTT über WebSocket nutzen (Port 443)"
+      },
+      "help": {
+        "en": "Enable if port 8883 is blocked in your network",
+        "de": "Aktivieren, wenn Port 8883 in deinem Netz blockiert ist"
+      },
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 6
+    }
+  }
+}
