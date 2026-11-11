@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { ToshibaHttpApi, ToshibaAuthError } = require('../lib/httpApi');
+const { ToshibaHttpApi, ToshibaAuthError, ToshibaRateLimitError } = require('../lib/httpApi');
 
 function mockFetch(handler) {
     const calls = [];
@@ -40,8 +40,9 @@ test('login, device list and state', async () => {
         }
         return { status: 404 };
     });
-    const api = new ToshibaHttpApi('user', 'pw');
+    const api = new ToshibaHttpApi('user', 'pw', undefined, '0123456789abcdef');
     await api.login();
+    assert.equal(calls[0].opts.headers['Device-ID'], '0123456789abcdef');
     const devices = await api.getDevices();
     assert.equal(devices.length, 2);
     assert.equal(devices[1].name, 'Schlafzimmer');
@@ -71,4 +72,10 @@ test('re-login on 401', async () => {
     const st = await api.getDeviceState('a1');
     assert.equal(st.state, '31');
     assert.equal(calls.filter(c => c.path === '/api/Consumer/Login').length, 2);
+});
+
+test('HTTP 429 is reported as rate limit', async () => {
+    mockFetch(() => ({ status: 429 }));
+    const api = new ToshibaHttpApi('user', 'pw', undefined, 'abc');
+    await assert.rejects(api.login(), ToshibaRateLimitError);
 });

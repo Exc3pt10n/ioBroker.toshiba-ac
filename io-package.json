@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "toshiba-ac",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "news": {
+      "0.1.1": {
+        "en": "Fix login (HTTP 429): send Device-ID header required by the Toshiba cloud; longer back-off when rate limited",
+        "de": "Login-Fehler (HTTP 429) behoben: von der Toshiba-Cloud geforderten Device-ID-Header senden; längere Wartezeit bei Ratenbegrenzung"
+      },
       "0.1.0": {
         "en": "Initial release",
         "de": "Erste Version"
