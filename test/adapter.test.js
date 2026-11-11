@@ -130,3 +130,29 @@ test('push update from cloud updates states', async () => {
     assert.equal(adapter.states['Wohnzimmer.indoorTemperature'].val, 21);
     assert.equal(adapter.states['Wohnzimmer.outdoorTemperature'].val, -3);
 });
+
+test('rate limit pauses polling and triggers re-login afterwards', async () => {
+    const { ToshibaRateLimitError } = require('../lib/httpApi');
+    const { adapter } = await setup();
+    let stateCalls = 0;
+    let logins = 0;
+    adapter.http = {
+        getDeviceState: async () => {
+            stateCalls++;
+            if (stateCalls === 1) {
+                throw new ToshibaRateLimitError('HTTP 403');
+            }
+            return { state: '31' };
+        },
+        login: async () => logins++,
+    };
+    await adapter.pollAll();
+    assert.equal(stateCalls, 1);
+    await adapter.pollAll(); // paused
+    assert.equal(stateCalls, 1);
+    adapter.rateLimitUntil = 0; // pause over
+    await adapter.pollAll();
+    assert.equal(stateCalls, 2);
+    assert.equal(logins, 1);
+    assert.equal(adapter.states['Wohnzimmer.power'].val, false);
+});

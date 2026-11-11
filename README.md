@@ -106,6 +106,10 @@ Open-Source-Python-Bibliothek [toshiba-ac](https://github.com/KaSroka/Toshiba-AC
 
 ## Changelog
 
+### 0.1.2 (2026-11-11)
+* HTTP 403 der Toshiba-Cloud vermeiden: mind. 1 s Abstand zwischen Anfragen, Erstabfrage nach 30 s, Energieverbrauch nach 90 s
+* Nach 403/429 pausiert die Abfrage 10 min (verdoppelt sich bis 1 h), danach neuer Login; Echtzeit-Updates laufen weiter
+
 ### 0.1.1 (2026-11-11)
 * Login-Fehler „HTTP 429“ behoben: Die Toshiba-Cloud verlangt seit Mitte 2026 einen `Device-ID`-Header
 * Bei Ratenbegrenzung (403/429) wird mindestens 10 Minuten gewartet

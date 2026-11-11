@@ -69,6 +69,10 @@ const SELECT_STATES = {
 };
 
 const CONFIRM_TIMEOUT_MS = 15000;
+const INITIAL_POLL_DELAY_MS = 30000;
+const INITIAL_ENERGY_DELAY_MS = 90000;
+const RATE_LIMIT_PAUSE_MS = 10 * 60000;
+const MAX_RATE_LIMIT_PAUSE_MS = 60 * 60000;
 
 class ToshibaAc extends utils.Adapter {
     constructor(options = {}) {
@@ -83,6 +87,11 @@ class ToshibaAc extends utils.Adapter {
         this.energyTimer = null;
         this.startTimer = null;
         this.startDelay = 60000;
+        this.initialPollTimer = null;
+        this.initialEnergyTimer = null;
+        this.rateLimitUntil = 0;
+        this.rateLimitBackoff = RATE_LIMIT_PAUSE_MS;
+        this.reloginNeeded = false;
         this.unloading = false;
 
         this.on('ready', this.onReady.bind(this));
@@ -157,16 +166,59 @@ class ToshibaAc extends utils.Adapter {
         await this.iot.connect();
         this.log.info(`Connected to Toshiba IoT Hub, ${acs.length} indoor unit(s) found`);
 
-        // fetch model names and fresh state
-        await this.pollAll(true);
+        // The device list already contains the current state. Model names and a fresh state
+        // are fetched a bit later: the Toshiba cloud answers bursts of requests with HTTP 403.
+        this.initialPollTimer = this.setTimeout(() => {
+            this.initialPollTimer = null;
+            this.pollAll(true);
+        }, INITIAL_POLL_DELAY_MS);
 
         const pollMinutes = Math.max(1, Number(this.config.pollInterval) || 10);
         this.pollTimer = this.setInterval(() => this.pollAll(), pollMinutes * 60000);
 
         if ([...this.devices.values()].some(d => d.features.energyReport)) {
             const energyMinutes = Math.max(5, Number(this.config.energyInterval) || 30);
-            await this.updateEnergy();
+            this.initialEnergyTimer = this.setTimeout(() => {
+                this.initialEnergyTimer = null;
+                this.updateEnergy();
+            }, INITIAL_ENERGY_DELAY_MS);
             this.energyTimer = this.setInterval(() => this.updateEnergy(), energyMinutes * 60000);
+        }
+    }
+
+    /**
+     * Runs an HTTP request while respecting the rate limit of the Toshiba cloud.
+     * After HTTP 403/429 all polling pauses (10 min, doubling up to 1 h); afterwards the
+     * adapter logs in again before the next request, since 403 may also mean an expired token.
+     *
+     * @returns {Promise<any>} result, or undefined if skipped because of the rate limit pause
+     */
+    async httpCall(fn) {
+        if (Date.now() < this.rateLimitUntil) {
+            this.log.debug('Skipping cloud request, rate limit pause active');
+            return undefined;
+        }
+        try {
+            if (this.reloginNeeded) {
+                this.reloginNeeded = false;
+                await this.http.login();
+            }
+            const res = await fn();
+            this.rateLimitBackoff = RATE_LIMIT_PAUSE_MS;
+            return res;
+        } catch (e) {
+            if (e instanceof ToshibaRateLimitError) {
+                const pause = Math.max(this.rateLimitBackoff, e.retryAfterMs || 0);
+                this.rateLimitUntil = Date.now() + pause;
+                this.rateLimitBackoff = Math.min(this.rateLimitBackoff * 2, MAX_RATE_LIMIT_PAUSE_MS);
+                this.reloginNeeded = true;
+                this.log.warn(
+                    `${e.message}. Pausing cloud polling for ${Math.round(pause / 60000)} min ` +
+                        '(real-time updates via IoT Hub continue).',
+                );
+                return undefined;
+            }
+            throw e;
         }
     }
 
@@ -443,24 +495,27 @@ class ToshibaAc extends utils.Adapter {
     }
 
     async pollDevice(device, withModels = false, force = false) {
-        const res = await this.http.getDeviceState(device.acId);
+        const res = await this.httpCall(() => this.http.getDeviceState(device.acId));
+        if (!res) {
+            return false;
+        }
         device.fcu.merge(FcuState.fromHex(res.state));
         await this.updateStates(device, res.state, force);
         if (withModels) {
             await this.setStateAsync(`${device.id}.info.indoorUnitModel`, res.fcuModel || '', true);
             await this.setStateAsync(`${device.id}.info.outdoorUnitModel`, res.cduModel || '', true);
         }
+        return true;
     }
 
     async pollAll(withModels = false) {
         for (const device of this.devices.values()) {
             try {
-                await this.pollDevice(device, withModels);
+                if (!(await this.pollDevice(device, withModels))) {
+                    return; // rate limit pause
+                }
             } catch (e) {
                 this.log.warn(`${device.name}: state update failed: ${e.message}`);
-                if (e instanceof ToshibaRateLimitError) {
-                    return;
-                }
             }
         }
     }
@@ -471,7 +526,10 @@ class ToshibaAc extends utils.Adapter {
             return;
         }
         try {
-            const energy = await this.http.getEnergyConsumption(ids);
+            const energy = await this.httpCall(() => this.http.getEnergyConsumption(ids));
+            if (!energy) {
+                return;
+            }
             for (const [uniqueId, wh] of Object.entries(energy)) {
                 const device = this.devices.get(uniqueId);
                 if (device) {
@@ -594,6 +652,12 @@ class ToshibaAc extends utils.Adapter {
     }
 
     async stopConnections() {
+        for (const t of ['initialPollTimer', 'initialEnergyTimer']) {
+            if (this[t]) {
+                this.clearTimeout(this[t]);
+                this[t] = null;
+            }
+        }
         if (this.pollTimer) {
             this.clearInterval(this.pollTimer);
             this.pollTimer = null;
