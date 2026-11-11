@@ -101,10 +101,14 @@ Open-Source-Python-Bibliothek [toshiba-ac](https://github.com/KaSroka/Toshiba-AC
 
 * **„Login failed“**: Zugangsdaten prüfen – mit denselben Daten in der App an- und abmelden.
 * **Keine Echtzeit-Updates / `info.connection` bleibt `false`**: Port 8883 gesperrt? Option „MQTT über WebSocket“ aktivieren.
-* **HTTP 403**: Die Toshiba-Cloud begrenzt die Anfragerate. Das Abfrageintervall nicht zu klein wählen.
+* **HTTP 403 / 429**: Die Toshiba-Cloud begrenzt die Anfragerate. Der Adapter wartet dann mindestens 10 Minuten; das Abfrageintervall nicht zu klein wählen.
 * Für Details die Instanz auf Log-Level `debug` stellen; die rohen Zustände stehen auch in `info.rawState`.
 
 ## Changelog
+
+### 0.1.1 (2026-11-11)
+* Login-Fehler „HTTP 429“ behoben: Die Toshiba-Cloud verlangt seit Mitte 2026 einen `Device-ID`-Header
+* Bei Ratenbegrenzung (403/429) wird mindestens 10 Minuten gewartet
 
 ### 0.1.0 (2026-11-11)
 * Erste Version: Auslesen und Steuern über die Toshiba Home AC Control Cloud, Echtzeit-Updates per Azure IoT Hub, Energieverbrauch

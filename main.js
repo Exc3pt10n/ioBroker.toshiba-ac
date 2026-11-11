@@ -115,7 +115,11 @@ class ToshibaAc extends utils.Adapter {
                 this.log.error(`Login failed: ${e.message}. Please check user name and password.`);
                 return;
             }
-            const delay = e instanceof ToshibaRateLimitError ? Math.max(this.startDelay, 10 * 60000) : this.startDelay;
+            // never hammer the cloud after a rate limit answer, otherwise the block gets longer
+            const delay =
+                e instanceof ToshibaRateLimitError
+                    ? Math.max(this.startDelay, 10 * 60000, e.retryAfterMs || 0)
+                    : this.startDelay;
             this.log.warn(`Initialisation failed: ${e.message}. Retrying in ${Math.round(delay / 1000)} s`);
             this.startTimer = this.setTimeout(() => {
                 this.startTimer = null;
@@ -126,11 +130,12 @@ class ToshibaAc extends utils.Adapter {
     }
 
     async initialize() {
-        this.http = new ToshibaHttpApi(this.config.username, this.config.password, this.log);
+        const clientId = await this.getClientId();
+        const deviceId = `${this.config.username}_${clientId}`;
+
+        this.http = new ToshibaHttpApi(this.config.username, this.config.password, this.log, clientId);
         await this.http.login();
         this.log.info('Logged in to Toshiba Home AC Control cloud');
-
-        const deviceId = `${this.config.username}_${await this.getClientId()}`;
 
         const acs = await this.http.getDevices();
         if (!acs.length) {
