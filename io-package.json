@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "toshiba-ac",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "news": {
+      "0.1.2": {
+        "en": "Avoid HTTP 403 from the Toshiba cloud: spread out requests, delayed initial refresh, pause polling after rate limit",
+        "de": "HTTP 403 der Toshiba-Cloud vermeiden: Anfragen entzerrt, verzögerte Erstabfrage, Pause nach Ratenbegrenzung"
+      },
       "0.1.1": {
         "en": "Fix login (HTTP 429): send Device-ID header required by the Toshiba cloud; longer back-off when rate limited",
         "de": "Login-Fehler (HTTP 429) behoben: von der Toshiba-Cloud geforderten Device-ID-Header senden; längere Wartezeit bei Ratenbegrenzung"
