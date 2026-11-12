@@ -1,0 +1,48 @@
+name: Backfill version tags
+
+# Einmalig: setzt die Tags der Versionen vor Einführung des automatischen Taggings
+# auf die Commits, mit denen package.json auf die jeweilige Version gesetzt wurde.
+# Wird zusammen mit der Einführung von tag-release.yml wieder entfernt.
+on:
+    push:
+        branches:
+            - main
+
+permissions:
+    contents: write
+
+jobs:
+    backfill:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Tag earlier versions if missing
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  while read -r VERSION COMMIT; do
+                      TAG="v$VERSION"
+                      if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+                          echo "$TAG existiert bereits, nichts zu tun"
+                          continue
+                      fi
+                      ACTUAL=$(git show "$COMMIT:package.json" | node -p "JSON.parse(require('fs').readFileSync(0)).version")
+                      if [ "$ACTUAL" != "$VERSION" ]; then
+                          echo "::error::$COMMIT hat Version $ACTUAL statt $VERSION"
+                          exit 1
+                      fi
+                      git tag -a "$TAG" "$COMMIT" -m "$TAG"
+                      git push origin "$TAG"
+                      echo "Tag $TAG auf $COMMIT gesetzt"
+                  done <<'LIST'
+                  0.1.0 0fce761
+                  0.1.1 0529e81
+                  0.1.2 624e1ad
+                  0.1.3 d07884f
+                  0.1.4 aef239a
+                  0.1.5 3c99d90
+                  LIST
