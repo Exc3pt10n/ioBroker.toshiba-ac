@@ -105,10 +105,14 @@ Open-Source-Python-Bibliothek [toshiba-ac](https://github.com/KaSroka/Toshiba-AC
 
 * **„Login failed“**: Zugangsdaten prüfen – mit denselben Daten in der App an- und abmelden.
 * **Keine Echtzeit-Updates / `info.connection` bleibt `false`**: Port 8883 gesperrt? Option „MQTT über WebSocket“ aktivieren.
+* **HTTP 403 beim Energieverbrauch**: Die Toshiba-Cloud lehnt diese Abfrage häufig ab. Der Adapter versucht es später erneut; `energyConsumptionYear` behält bis dahin den letzten Wert.
 * **HTTP 403 / 429**: Die Toshiba-Cloud begrenzt die Anfragerate. Der Adapter wartet dann mindestens 10 Minuten; das Abfrageintervall nicht zu klein wählen.
 * Für Details die Instanz auf Log-Level `debug` stellen; die rohen Zustände stehen auch in `info.rawState`.
 
 ## Changelog
+
+### 0.1.6 (2026-11-12)
+* Energieverbrauch: Die Toshiba-Cloud lehnt diese Abfrage für Fremd-Clients häufig mit HTTP 403 ab. Nur noch die erste Ablehnung einer Serie wird geloggt (als Info statt Warnung), neue Versuche werden bis auf alle 6 Stunden ausgedehnt, der letzte Wert bleibt erhalten. Klappt die Abfrage wieder, steht das im Log
 
 ### 0.1.5 (2026-11-12)
 * HTTP-403-Warnungen behoben: Die Toshiba-Cloud lehnt die Einzelabfrage `GetCurrentACState` für manche Innengeräte ab (beobachtet bei Multi-Split-Innengeräten). Zustände werden jetzt über die Geräteliste aktualisiert – eine Anfrage für alle Geräte

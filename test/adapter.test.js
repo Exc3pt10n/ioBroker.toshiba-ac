@@ -204,3 +204,47 @@ test('SAS token is reused while valid', async () => {
     await adapter.getSasToken('ioBroker-1');
     assert.equal(registrations, 2);
 });
+
+test('energy: rejection logged once, quiet afterwards, longer back-off, recovery logged', async () => {
+    const { ToshibaRateLimitError } = require('../lib/httpApi');
+    const { adapter } = await setup();
+    await adapter.setupDevice({
+        acId: 'a3',
+        uniqueId: 'u-3',
+        name: 'Energie',
+        state: '30',
+        meritFeature: 'ffff',
+        modelId: '3',
+    });
+    const logs = { info: [], warn: [], debug: [] };
+    adapter.log = {
+        info: m => logs.info.push(m),
+        warn: m => logs.warn.push(m),
+        debug: m => logs.debug.push(m),
+        error: () => {},
+    };
+    let fail = true;
+    let logins = 0;
+    adapter.http = {
+        getEnergyConsumption: async () => {
+            if (fail) {
+                throw new ToshibaRateLimitError('HTTP 403');
+            }
+            return { 'u-3': 500 };
+        },
+        login: async () => logins++,
+    };
+    for (let i = 0; i < 6; i++) {
+        await adapter.updateEnergy();
+        adapter.rateLimits.energy.until = 0; // pretend the pause is over
+    }
+    assert.equal(logs.warn.length, 0);
+    assert.equal(logs.info.length, 1);
+    assert.match(logs.info[0], /HTTP 403/);
+    assert.equal(adapter.rateLimits.energy.backoff, 6 * 60 * 60000);
+    assert.equal(logins, 0, 'no re-login for energy rejections');
+    fail = false;
+    await adapter.updateEnergy();
+    assert.equal(adapter.states['Energie.energyConsumptionYear'].val, 500);
+    assert.match(logs.info[1], /answered again/);
+});

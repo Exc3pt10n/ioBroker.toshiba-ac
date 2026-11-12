@@ -72,7 +72,8 @@ const CONFIRM_TIMEOUT_MS = 15000;
 const INITIAL_POLL_DELAY_MS = 30000;
 const INITIAL_ENERGY_DELAY_MS = 90000;
 const RATE_LIMIT_PAUSE_MS = 10 * 60000;
-const MAX_RATE_LIMIT_PAUSE_MS = 60 * 60000;
+/** Maximum pause per request group after repeated rejections */
+const MAX_RATE_LIMIT_PAUSE_MS = { state: 60 * 60000, energy: 6 * 60 * 60000 };
 
 class ToshibaAc extends utils.Adapter {
     constructor(options = {}) {
@@ -199,37 +200,57 @@ class ToshibaAc extends utils.Adapter {
     /**
      * Runs an HTTP request while respecting the rate limit of the Toshiba cloud.
      * After HTTP 403/429 requests of the same group ("state", "energy") pause for 10 min,
-     * doubling up to 1 h; afterwards the adapter logs in again before the next request,
-     * since 403 may also mean an expired token. Other groups are not affected.
+     * doubling up to a maximum per group. Other groups are not affected.
+     *
+     * The cloud firewall regularly rejects some endpoints for third-party clients (seen for
+     * the energy consumption), so only the first rejection of a series is logged; the next
+     * ones go to the debug log, and a recovery is logged again.
      *
      * @param {string} group
      * @param {() => Promise<any>} fn
      * @returns {Promise<any>} result, or undefined if skipped because of the rate limit pause
      */
     async httpCall(group, fn) {
-        const limit = (this.rateLimits[group] ||= { until: 0, backoff: RATE_LIMIT_PAUSE_MS });
+        const limit = (this.rateLimits[group] ||= { until: 0, backoff: RATE_LIMIT_PAUSE_MS, failures: 0 });
         if (Date.now() < limit.until) {
             this.log.debug(`Skipping cloud request (${group}), rate limit pause active`);
             return undefined;
         }
         try {
-            if (this.reloginNeeded) {
+            if (group === 'state' && this.reloginNeeded) {
+                // 403 may also mean an expired token
                 this.reloginNeeded = false;
                 await this.http.login();
             }
             const res = await fn();
+            if (limit.failures) {
+                this.log.info(`Cloud requests (${group}) are answered again`);
+            }
+            limit.failures = 0;
             limit.backoff = RATE_LIMIT_PAUSE_MS;
             return res;
         } catch (e) {
             if (e instanceof ToshibaRateLimitError) {
                 const pause = Math.max(limit.backoff, e.retryAfterMs || 0);
                 limit.until = Date.now() + pause;
-                limit.backoff = Math.min(limit.backoff * 2, MAX_RATE_LIMIT_PAUSE_MS);
-                this.reloginNeeded = true;
-                this.log.warn(
-                    `${e.message}. Pausing these requests for ${Math.round(pause / 60000)} min ` +
-                        '(real-time updates via IoT Hub continue).',
+                limit.backoff = Math.min(
+                    limit.backoff * 2,
+                    MAX_RATE_LIMIT_PAUSE_MS[group] || MAX_RATE_LIMIT_PAUSE_MS.state,
                 );
+                limit.failures++;
+                if (group === 'state') {
+                    this.reloginNeeded = true;
+                }
+                const msg =
+                    `${e.message}. Pausing these requests for ${Math.round(pause / 60000)} min ` +
+                    '(real-time updates via IoT Hub continue).';
+                if (limit.failures > 1) {
+                    this.log.debug(msg);
+                } else if (group === 'energy') {
+                    this.log.info(`${msg} The energy consumption keeps its last value.`);
+                } else {
+                    this.log.warn(msg);
+                }
                 return undefined;
             }
             throw e;
