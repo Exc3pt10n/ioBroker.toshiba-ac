@@ -146,8 +146,9 @@ class ToshibaAc extends utils.Adapter {
     async initialize() {
         // One identifier for everything: Device-ID header, device registration and IoT Hub
         // sourceId. The Toshiba cloud rejects requests (HTTP 403) once the Device-ID header
-        // does not match the registered mobile device.
-        const deviceId = `ioBroker-${await this.getClientId()}`;
+        // does not match the registered mobile device, and the registration only accepts
+        // ids in the form "<username>_<16 hex digits>" (otherwise "Invalid Inputs").
+        const deviceId = `${this.config.username}_${await this.getClientId()}`;
 
         this.http = new ToshibaHttpApi(this.config.username, this.config.password, this.log, deviceId);
         await this.http.login();

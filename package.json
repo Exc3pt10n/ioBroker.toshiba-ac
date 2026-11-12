@@ -1,6 +1,6 @@
 {
   "name": "iobroker.toshiba-ac",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Control Toshiba air conditioners (Toshiba Home AC Control cloud) with ioBroker",
   "author": {
     "name": "Exc3pt10n"
