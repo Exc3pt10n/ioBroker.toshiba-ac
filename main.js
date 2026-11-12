@@ -92,6 +92,9 @@ class ToshibaAc extends utils.Adapter {
         this.rateLimitUntil = 0;
         this.rateLimitBackoff = RATE_LIMIT_PAUSE_MS;
         this.reloginNeeded = false;
+        this.sasToken = null;
+        this.sasDeviceId = null;
+        this.sasExpiry = 0;
         this.unloading = false;
 
         this.on('ready', this.onReady.bind(this));
@@ -139,10 +142,12 @@ class ToshibaAc extends utils.Adapter {
     }
 
     async initialize() {
-        const clientId = await this.getClientId();
-        const deviceId = `${this.config.username}_${clientId}`;
+        // One identifier for everything: Device-ID header, device registration and IoT Hub
+        // sourceId. The Toshiba cloud rejects requests (HTTP 403) once the Device-ID header
+        // does not match the registered mobile device.
+        const deviceId = `ioBroker-${await this.getClientId()}`;
 
-        this.http = new ToshibaHttpApi(this.config.username, this.config.password, this.log, clientId);
+        this.http = new ToshibaHttpApi(this.config.username, this.config.password, this.log, deviceId);
         await this.http.login();
         this.log.info('Logged in to Toshiba Home AC Control cloud');
 
@@ -158,7 +163,7 @@ class ToshibaAc extends utils.Adapter {
             deviceId,
             useWebsocket: !!this.config.useWebsocket,
             log: this.log,
-            getSasToken: () => this.http.registerClient(deviceId),
+            getSasToken: () => this.getSasToken(deviceId),
         });
         this.iot.on('command', msg => this.onCloudCommand(msg).catch(e => this.log.warn(`Error handling message: ${e.message}`)));
         this.iot.on('connection', connected => this.setState('info.connection', connected, true));
@@ -220,6 +225,22 @@ class ToshibaAc extends utils.Adapter {
             }
             throw e;
         }
+    }
+
+    /**
+     * Returns the IoT Hub SAS token. A token is reused while it is valid for at least
+     * 15 more minutes, because frequent registrations are answered with HTTP 429.
+     */
+    async getSasToken(deviceId) {
+        if (this.sasToken && this.sasDeviceId === deviceId && this.sasExpiry - Date.now() > 15 * 60000) {
+            return this.sasToken;
+        }
+        const token = await this.http.registerClient(deviceId);
+        const m = /[?&\s]se=(\d+)/.exec(` ${token}`);
+        this.sasToken = token;
+        this.sasDeviceId = deviceId;
+        this.sasExpiry = m ? parseInt(m[1], 10) * 1000 : Date.now() + 60 * 60000;
+        return token;
     }
 
     /** Stable random id of this adapter instance used to register at the cloud. */

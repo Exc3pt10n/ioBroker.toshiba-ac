@@ -99,12 +99,19 @@ Open-Source-Python-Bibliothek [toshiba-ac](https://github.com/KaSroka/Toshiba-AC
 
 ## Fehlersuche
 
+* **Nur eine aktive Verbindung pro Konto:** Laut Erfahrungen anderer Integrationen akzeptiert die Toshiba-Cloud pro Konto nur eine aktive Sitzung. Ist die App gleichzeitig offen, können Befehle oder Abfragen scheitern. Abhilfe: In der App ein zweites Konto anlegen und die Geräte dafür freigeben, oder die App nur selten nutzen.
+
 * **„Login failed“**: Zugangsdaten prüfen – mit denselben Daten in der App an- und abmelden.
 * **Keine Echtzeit-Updates / `info.connection` bleibt `false`**: Port 8883 gesperrt? Option „MQTT über WebSocket“ aktivieren.
 * **HTTP 403 / 429**: Die Toshiba-Cloud begrenzt die Anfragerate. Der Adapter wartet dann mindestens 10 Minuten; das Abfrageintervall nicht zu klein wählen.
 * Für Details die Instanz auf Log-Level `debug` stellen; die rohen Zustände stehen auch in `info.rawState`.
 
 ## Changelog
+
+### 0.1.3 (2026-11-12)
+* HTTP 403 bei `GetCurrentACState` / Energieverbrauch behoben: Der Adapter nutzt jetzt eine einzige Kennung (`ioBroker-<clientId>`) für `Device-ID`-Header, Geräteregistrierung und IoT Hub
+* SAS-Token wird wiederverwendet, solange es gültig ist
+* Antworttext abgelehnter Anfragen im Debug-Log
 
 ### 0.1.2 (2026-11-11)
 * HTTP 403 der Toshiba-Cloud vermeiden: mind. 1 s Abstand zwischen Anfragen, Erstabfrage nach 30 s, Energieverbrauch nach 90 s

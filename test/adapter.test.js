@@ -156,3 +156,22 @@ test('rate limit pauses polling and triggers re-login afterwards', async () => {
     assert.equal(logins, 1);
     assert.equal(adapter.states['Wohnzimmer.power'].val, false);
 });
+
+test('SAS token is reused while valid', async () => {
+    const { adapter } = await setup();
+    let registrations = 0;
+    const se = Math.floor(Date.now() / 1000) + 3600;
+    adapter.http = {
+        registerClient: async id => {
+            registrations++;
+            return `SharedAccessSignature sr=hub%2Fdevices%2F${id}&sig=x&se=${se}`;
+        },
+    };
+    const a = await adapter.getSasToken('ioBroker-1');
+    const b = await adapter.getSasToken('ioBroker-1');
+    assert.equal(a, b);
+    assert.equal(registrations, 1);
+    adapter.sasExpiry = Date.now() + 60000; // about to expire
+    await adapter.getSasToken('ioBroker-1');
+    assert.equal(registrations, 2);
+});
