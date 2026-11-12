@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "toshiba-ac",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "news": {
+      "0.1.6": {
+        "en": "Energy consumption: the Toshiba cloud often rejects this request (HTTP 403); log the first rejection only (info), retry less often (up to every 6 h), keep the last value",
+        "de": "Energieverbrauch: Die Toshiba-Cloud lehnt diese Abfrage oft ab (HTTP 403); nur die erste Ablehnung wird geloggt (Info), seltener neue Versuche (bis alle 6 h), letzter Wert bleibt erhalten"
+      },
       "0.1.5": {
         "en": "Fix HTTP 403 warnings: refresh states via the device list (one request for all units); model names are best effort, as the cloud rejects them for some units (e.g. multi split)",
         "de": "HTTP-403-Warnungen behoben: Zustände über die Geräteliste aktualisieren (eine Anfrage für alle Geräte); Modellnamen nur, wenn die Cloud sie liefert (bei manchen Geräten, z. B. Multi-Split, abgelehnt)"
