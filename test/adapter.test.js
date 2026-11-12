@@ -131,30 +131,59 @@ test('push update from cloud updates states', async () => {
     assert.equal(adapter.states['Wohnzimmer.outdoorTemperature'].val, -3);
 });
 
-test('rate limit pauses polling and triggers re-login afterwards', async () => {
+test('polling uses the device list; rate limit pauses it and triggers re-login', async () => {
     const { ToshibaRateLimitError } = require('../lib/httpApi');
     const { adapter } = await setup();
-    let stateCalls = 0;
+    let listCalls = 0;
     let logins = 0;
     adapter.http = {
-        getDeviceState: async () => {
-            stateCalls++;
-            if (stateCalls === 1) {
+        getDevices: async () => {
+            listCalls++;
+            if (listCalls === 1) {
                 throw new ToshibaRateLimitError('HTTP 403');
             }
-            return { state: '31' };
+            return [{ uniqueId: 'u-1', state: '31ffffffffffffffffffffffffffffffffffff' }];
         },
+        getEnergyConsumption: async () => ({ 'u-1': 1234 }),
         login: async () => logins++,
     };
-    await adapter.pollAll();
-    assert.equal(stateCalls, 1);
+    assert.equal(await adapter.pollAll(), false);
+    assert.equal(listCalls, 1);
     await adapter.pollAll(); // paused
-    assert.equal(stateCalls, 1);
-    adapter.rateLimitUntil = 0; // pause over
-    await adapter.pollAll();
-    assert.equal(stateCalls, 2);
+    assert.equal(listCalls, 1);
+    adapter.rateLimits.state.until = 0; // pause over
+    assert.equal(await adapter.pollAll(), true);
+    assert.equal(listCalls, 2);
     assert.equal(logins, 1);
     assert.equal(adapter.states['Wohnzimmer.power'].val, false);
+});
+
+test('model names: rejected units are skipped, others filled, polling not paused', async () => {
+    const { ToshibaRateLimitError } = require('../lib/httpApi');
+    const { adapter } = await setup();
+    await adapter.setupDevice({
+        acId: 'a2',
+        uniqueId: 'u-2',
+        name: 'Arbeitszimmer',
+        state: '3143ffffffffffffffffffffffffffffffffff',
+        meritFeature: '2c00',
+        modelId: '2',
+    });
+    adapter.http = {
+        getDeviceState: async acId => {
+            if (acId === 'a2') {
+                throw new ToshibaRateLimitError('HTTP 403');
+            }
+            return { state: '30', fcuModel: 'RAS-B16G3KVSG-E', cduModel: 'NULL' };
+        },
+        getDevices: async () => [],
+    };
+    await adapter.loadModelInfo();
+    assert.equal(adapter.states['Wohnzimmer.info.indoorUnitModel'].val, 'RAS-B16G3KVSG-E');
+    assert.equal(adapter.states['Wohnzimmer.info.outdoorUnitModel'].val, '');
+    assert.equal(adapter.states['Arbeitszimmer.info.indoorUnitModel'], undefined);
+    assert.equal(adapter.rateLimits.state, undefined);
+    assert.equal(await adapter.pollAll(), true);
 });
 
 test('SAS token is reused while valid', async () => {
