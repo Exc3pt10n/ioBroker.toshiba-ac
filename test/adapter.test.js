@@ -99,7 +99,7 @@ test('user command is encoded and sent', async () => {
     await adapter.onStateChange('toshiba-ac.0.Wohnzimmer.mode', { val: 'HEAT', ack: false });
     assert.deepEqual(
         sent.map(s => s.hex),
-        ['ffff18' + 'f'.repeat(32), '31' + 'f'.repeat(36), 'ff43' + 'f'.repeat(34)],
+        [`ffff18${'f'.repeat(32)}`, `31${'f'.repeat(36)}`, `ff43${'f'.repeat(34)}`],
     );
     assert.equal(sent[0].id, 'u-1');
     for (const d of adapter.devices.values()) {

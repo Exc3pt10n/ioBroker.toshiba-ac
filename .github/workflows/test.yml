@@ -1,19 +1,41 @@
 name: Test
 
+# Pull Requests prüfen; Pushes nur auf main (Branches laufen über ihren Pull Request, sonst doppelt)
 on:
   push:
+    branches: [main]
   pull_request:
 
+# Neuer Push auf denselben Branch/PR bricht den älteren Lauf ab
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
+  # Lint, Paketprüfung und schnelle Tests je unterstützter Node-Version
+  check:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20.x, 22.x, 24.x]
+        node-version: [22.x, 24.x]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm install
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
       - run: npm test
+
+  # Integrationstest (startet eine echte js-controller-Instanz) – einmal genügt
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - run: npm ci
+      - run: npm run test:integration

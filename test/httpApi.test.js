@@ -19,7 +19,9 @@ test('login, device list and state', async () => {
     const calls = mockFetch(path => {
         switch (path) {
             case '/api/Consumer/Login':
-                return { body: { IsSuccess: true, ResObj: { access_token: 'tok', token_type: 'Bearer', consumerId: 'c1' } } };
+                return {
+                    body: { IsSuccess: true, ResObj: { access_token: 'tok', token_type: 'Bearer', consumerId: 'c1' } },
+                };
             case '/api/AC/GetConsumerACMapping':
                 return {
                     body: {
@@ -28,15 +30,34 @@ test('login, device list and state', async () => {
                             {
                                 GroupName: 'Home',
                                 ACList: [
-                                    { Id: 'a1', DeviceUniqueId: 'u1', Name: 'Wohnzimmer', ACStateData: '30', MeritFeature: '0b00', ACModelId: '2' },
-                                    { Id: 'a2', DeviceUniqueId: 'u2', Name: 'Schlafzimmer', ACStateData: '31', MeritFeature: '0b00', ACModelId: '2' },
+                                    {
+                                        Id: 'a1',
+                                        DeviceUniqueId: 'u1',
+                                        Name: 'Wohnzimmer',
+                                        ACStateData: '30',
+                                        MeritFeature: '0b00',
+                                        ACModelId: '2',
+                                    },
+                                    {
+                                        Id: 'a2',
+                                        DeviceUniqueId: 'u2',
+                                        Name: 'Schlafzimmer',
+                                        ACStateData: '31',
+                                        MeritFeature: '0b00',
+                                        ACModelId: '2',
+                                    },
                                 ],
                             },
                         ],
                     },
                 };
             case '/api/AC/GetCurrentACState':
-                return { body: { IsSuccess: true, ResObj: { ACStateData: '3042', Fcu: { model_name: 'RAS-B10' }, Cdu: null } } };
+                return {
+                    body: {
+                        IsSuccess: true,
+                        ResObj: { ACStateData: '3042', Fcu: { model_name: 'RAS-B10' }, Cdu: null },
+                    },
+                };
         }
         return { status: 404 };
     });

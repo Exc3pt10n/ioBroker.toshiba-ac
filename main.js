@@ -77,9 +77,9 @@ const MAX_RATE_LIMIT_PAUSE_MS = 60 * 60000;
 class ToshibaAc extends utils.Adapter {
     constructor(options = {}) {
         super({ ...options, name: 'toshiba-ac' });
-        /** @type {Map<string, any>} uniqueId -> device */
+        /** uniqueId -> device */
         this.devices = new Map();
-        /** @type {Map<string, string>} object id prefix -> uniqueId */
+        /** object id prefix -> uniqueId */
         this.idToUnique = new Map();
         this.http = null;
         this.iot = null;
@@ -106,7 +106,9 @@ class ToshibaAc extends utils.Adapter {
         await this.setStateAsync('info.connection', false, true);
 
         if (!this.config.username || !this.config.password) {
-            this.log.error('Please enter user name and password of your Toshiba Home AC Control account in the adapter settings.');
+            this.log.error(
+                'Please enter user name and password of your Toshiba Home AC Control account in the adapter settings.',
+            );
             return;
         }
 
@@ -165,7 +167,9 @@ class ToshibaAc extends utils.Adapter {
             log: this.log,
             getSasToken: () => this.getSasToken(deviceId),
         });
-        this.iot.on('command', msg => this.onCloudCommand(msg).catch(e => this.log.warn(`Error handling message: ${e.message}`)));
+        this.iot.on('command', msg =>
+            this.onCloudCommand(msg).catch(e => this.log.warn(`Error handling message: ${e.message}`)),
+        );
         this.iot.on('connection', connected => this.setState('info.connection', connected, true));
         this.iot.on('reconnected', () => this.pollAll());
         await this.iot.connect();
@@ -263,7 +267,9 @@ class ToshibaAc extends utils.Adapter {
             base = String(ac.uniqueId).replace(this.FORBIDDEN_CHARS, '_').replace(/\./g, '_');
         }
         if (this.idToUnique.has(base) && this.idToUnique.get(base) !== ac.uniqueId) {
-            base = `${base}_${String(ac.uniqueId).replace(/[^0-9a-zA-Z]/g, '').slice(0, 8)}`;
+            base = `${base}_${String(ac.uniqueId)
+                .replace(/[^0-9a-zA-Z]/g, '')
+                .slice(0, 8)}`;
         }
         return base;
     }
@@ -281,7 +287,9 @@ class ToshibaAc extends utils.Adapter {
         const device = { ...ac, id, features, fcu, confirmTimer: null };
         this.devices.set(ac.uniqueId, device);
         this.idToUnique.set(id, ac.uniqueId);
-        this.log.debug(`${ac.name}: model ${ac.modelId}, merit ${ac.meritFeature}, features ${JSON.stringify(features)}`);
+        this.log.debug(
+            `${ac.name}: model ${ac.modelId}, merit ${ac.meritFeature}, features ${JSON.stringify(features)}`,
+        );
 
         await this.extendObjectAsync(id, {
             type: 'device',
@@ -304,7 +312,13 @@ class ToshibaAc extends utils.Adapter {
             group: [{ en: 'Group in app', de: 'Gruppe in der App' }, ac.groupName],
         };
         for (const [key, [name, val]] of Object.entries(info)) {
-            await this.createState(`${id}.info.${key}`, { name, type: 'string', role: 'text', read: true, write: false });
+            await this.createState(`${id}.info.${key}`, {
+                name,
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: false,
+            });
             await this.setStateAsync(`${id}.info.${key}`, val === undefined || val === null ? '' : String(val), true);
         }
         await this.createState(`${id}.info.indoorUnitModel`, {
@@ -597,7 +611,9 @@ class ToshibaAc extends utils.Adapter {
             this.clearConfirmTimer(device);
             device.confirmTimer = this.setTimeout(() => {
                 device.confirmTimer = null;
-                this.pollDevice(device, false, true).catch(e => this.log.debug(`${device.name}: refresh failed: ${e.message}`));
+                this.pollDevice(device, false, true).catch(e =>
+                    this.log.debug(`${device.name}: refresh failed: ${e.message}`),
+                );
             }, CONFIRM_TIMEOUT_MS);
         } catch (e) {
             this.log.warn(`${device.name}: cannot set ${key} to ${state.val}: ${e.message}`);
