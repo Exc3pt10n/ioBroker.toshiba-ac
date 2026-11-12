@@ -2,6 +2,8 @@
 
 # ioBroker.toshiba-ac
 
+[![Test](https://github.com/Exc3pt10n/ioBroker.toshiba-ac/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/Exc3pt10n/ioBroker.toshiba-ac/actions/workflows/test.yml)
+
 Liest und steuert Toshiba Split-Klimaanlagen (Single- und Multi-Split) über die
 **Toshiba Home AC Control** Cloud, also dieselbe Cloud, die auch die iPhone- bzw.
 Android-App „Toshiba Home AC Control“ nutzt.
