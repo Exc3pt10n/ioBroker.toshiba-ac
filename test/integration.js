@@ -4,6 +4,9 @@ const { tests } = require('@iobroker/testing');
 
 // Startet den Adapter in einer echten js-controller-Testinstanz (ohne Zugangsdaten, also ohne Cloud-Zugriff)
 tests.integration(path.join(__dirname, '..'), {
+    // Stabile js-controller-Version statt der nächtlichen Entwicklungsversion ("dev"):
+    // entspricht den echten Installationen und bricht nicht bei fehlerhaften Nightly-Builds
+    controllerVersion: 'latest',
     defineAdditionalTests({ suite }) {
         suite('Start ohne Zugangsdaten', getHarness => {
             it('startet, legt die Instanz-Objekte an und meldet keine Verbindung', async function () {
