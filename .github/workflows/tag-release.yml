@@ -1,0 +1,34 @@
+name: Tag release
+
+# Setzt nach einem Merge auf main automatisch den Tag vX.Y.Z,
+# wenn die Version in package.json noch keinen Tag hat.
+on:
+    push:
+        branches:
+            - main
+
+permissions:
+    contents: write
+
+jobs:
+    tag:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Tag version from package.json if missing
+              run: |
+                  VERSION=$(node -p "require('./package.json').version")
+                  TAG="v$VERSION"
+                  if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+                      echo "$TAG existiert bereits, nichts zu tun"
+                  else
+                      git config user.name "github-actions[bot]"
+                      git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                      git tag -a "$TAG" -m "$TAG"
+                      git push origin "$TAG"
+                      echo "Tag $TAG gesetzt"
+                  fi
