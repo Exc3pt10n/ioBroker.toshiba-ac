@@ -108,6 +108,10 @@ Open-Source-Python-Bibliothek [toshiba-ac](https://github.com/KaSroka/Toshiba-AC
 
 ## Changelog
 
+### 0.1.4 (2026-11-12)
+* Fehler „Invalid Inputs“ bei der Geräteregistrierung behoben: Die Toshiba-Cloud akzeptiert nur Geräte-IDs der Form `<benutzername>_<id>`. Diese ID wird jetzt einheitlich auch im `Device-ID`-Header und für den IoT Hub verwendet
+* Fehlermeldungen der Cloud nennen den betroffenen Endpunkt
+
 ### 0.1.3 (2026-11-12)
 * HTTP 403 bei `GetCurrentACState` / Energieverbrauch behoben: Der Adapter nutzt jetzt eine einzige Kennung (`ioBroker-<clientId>`) für `Device-ID`-Header, Geräteregistrierung und IoT Hub
 * SAS-Token wird wiederverwendet, solange es gültig ist
