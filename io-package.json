@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "toshiba-ac",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "news": {
+      "0.1.5": {
+        "en": "Fix HTTP 403 warnings: refresh states via the device list (one request for all units); model names are best effort, as the cloud rejects them for some units (e.g. multi split)",
+        "de": "HTTP-403-Warnungen behoben: Zustände über die Geräteliste aktualisieren (eine Anfrage für alle Geräte); Modellnamen nur, wenn die Cloud sie liefert (bei manchen Geräten, z. B. Multi-Split, abgelehnt)"
+      },
       "0.1.4": {
         "en": "Fix \"Invalid Inputs\" on device registration: use <username>_<id> as device id (also for the Device-ID header)",
         "de": "\"Invalid Inputs\" bei der Geräteregistrierung behoben: <benutzername>_<id> als Geräte-ID (auch im Device-ID-Header)"

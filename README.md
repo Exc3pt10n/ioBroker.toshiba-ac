@@ -60,7 +60,7 @@ seinen eigenen Objektbaum.
 | `airPureIon` | boolean | ✔ | Plasma-Ionisator / Luftreinigung (nur wenn unterstützt) |
 | `selfCleaning` | boolean | | Selbstreinigung läuft |
 | `energyConsumptionYear` | number | | Verbrauch im laufenden Jahr in Wh (nur wenn unterstützt) |
-| `info.*` | | | Name, IDs, Firmware, Modell Innen-/Außengerät, Rohzustand, letzte Aktualisierung |
+| `info.*` | | | Name, IDs, Firmware, Modell Innen-/Außengerät (sofern die Cloud es liefert), Rohzustand, letzte Aktualisierung |
 
 Die Auswahllisten (`states`) der schreibbaren Objekte enthalten jeweils nur die Werte,
 die das jeweilige Gerät laut Cloud unterstützt.
@@ -107,6 +107,11 @@ Open-Source-Python-Bibliothek [toshiba-ac](https://github.com/KaSroka/Toshiba-AC
 * Für Details die Instanz auf Log-Level `debug` stellen; die rohen Zustände stehen auch in `info.rawState`.
 
 ## Changelog
+
+### 0.1.5 (2026-11-12)
+* HTTP-403-Warnungen behoben: Die Toshiba-Cloud lehnt die Einzelabfrage `GetCurrentACState` für manche Innengeräte ab (beobachtet bei Multi-Split-Innengeräten). Zustände werden jetzt über die Geräteliste aktualisiert – eine Anfrage für alle Geräte
+* Modellnamen (`info.indoorUnitModel`/`info.outdoorUnitModel`) werden nur beim Start versucht und bleiben leer, wenn die Cloud sie nicht liefert
+* Zustandsabfrage und Energieverbrauch pausieren bei Ratenbegrenzung unabhängig voneinander
 
 ### 0.1.4 (2026-11-12)
 * Fehler „Invalid Inputs“ bei der Geräteregistrierung behoben: Die Toshiba-Cloud akzeptiert nur Geräte-IDs der Form `<benutzername>_<id>`. Diese ID wird jetzt einheitlich auch im `Device-ID`-Header und für den IoT Hub verwendet

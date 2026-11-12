@@ -89,8 +89,8 @@ class ToshibaAc extends utils.Adapter {
         this.startDelay = 60000;
         this.initialPollTimer = null;
         this.initialEnergyTimer = null;
-        this.rateLimitUntil = 0;
-        this.rateLimitBackoff = RATE_LIMIT_PAUSE_MS;
+        /** rate limit pause per endpoint group */
+        this.rateLimits = {};
         this.reloginNeeded = false;
         this.sasToken = null;
         this.sasDeviceId = null;
@@ -176,11 +176,11 @@ class ToshibaAc extends utils.Adapter {
         await this.iot.connect();
         this.log.info(`Connected to Toshiba IoT Hub, ${acs.length} indoor unit(s) found`);
 
-        // The device list already contains the current state. Model names and a fresh state
-        // are fetched a bit later: the Toshiba cloud answers bursts of requests with HTTP 403.
+        // The device list already contains the current state. The model names are fetched
+        // a bit later: the Toshiba cloud answers bursts of requests with HTTP 403.
         this.initialPollTimer = this.setTimeout(() => {
             this.initialPollTimer = null;
-            this.pollAll(true);
+            this.loadModelInfo();
         }, INITIAL_POLL_DELAY_MS);
 
         const pollMinutes = Math.max(1, Number(this.config.pollInterval) || 10);
@@ -198,14 +198,18 @@ class ToshibaAc extends utils.Adapter {
 
     /**
      * Runs an HTTP request while respecting the rate limit of the Toshiba cloud.
-     * After HTTP 403/429 all polling pauses (10 min, doubling up to 1 h); afterwards the
-     * adapter logs in again before the next request, since 403 may also mean an expired token.
+     * After HTTP 403/429 requests of the same group ("state", "energy") pause for 10 min,
+     * doubling up to 1 h; afterwards the adapter logs in again before the next request,
+     * since 403 may also mean an expired token. Other groups are not affected.
      *
+     * @param {string} group
+     * @param {() => Promise<any>} fn
      * @returns {Promise<any>} result, or undefined if skipped because of the rate limit pause
      */
-    async httpCall(fn) {
-        if (Date.now() < this.rateLimitUntil) {
-            this.log.debug('Skipping cloud request, rate limit pause active');
+    async httpCall(group, fn) {
+        const limit = (this.rateLimits[group] ||= { until: 0, backoff: RATE_LIMIT_PAUSE_MS });
+        if (Date.now() < limit.until) {
+            this.log.debug(`Skipping cloud request (${group}), rate limit pause active`);
             return undefined;
         }
         try {
@@ -214,16 +218,16 @@ class ToshibaAc extends utils.Adapter {
                 await this.http.login();
             }
             const res = await fn();
-            this.rateLimitBackoff = RATE_LIMIT_PAUSE_MS;
+            limit.backoff = RATE_LIMIT_PAUSE_MS;
             return res;
         } catch (e) {
             if (e instanceof ToshibaRateLimitError) {
-                const pause = Math.max(this.rateLimitBackoff, e.retryAfterMs || 0);
-                this.rateLimitUntil = Date.now() + pause;
-                this.rateLimitBackoff = Math.min(this.rateLimitBackoff * 2, MAX_RATE_LIMIT_PAUSE_MS);
+                const pause = Math.max(limit.backoff, e.retryAfterMs || 0);
+                limit.until = Date.now() + pause;
+                limit.backoff = Math.min(limit.backoff * 2, MAX_RATE_LIMIT_PAUSE_MS);
                 this.reloginNeeded = true;
                 this.log.warn(
-                    `${e.message}. Pausing cloud polling for ${Math.round(pause / 60000)} min ` +
+                    `${e.message}. Pausing these requests for ${Math.round(pause / 60000)} min ` +
                         '(real-time updates via IoT Hub continue).',
                 );
                 return undefined;
@@ -530,28 +534,49 @@ class ToshibaAc extends utils.Adapter {
         }
     }
 
-    async pollDevice(device, withModels = false, force = false) {
-        const res = await this.httpCall(() => this.http.getDeviceState(device.acId));
-        if (!res) {
+    /**
+     * Refreshes the state of all units with a single request to the device list
+     * (GetConsumerACMapping). The per-unit endpoint GetCurrentACState is rejected with
+     * HTTP 403 by the Toshiba cloud for third-party clients since 2026, the list is not.
+     *
+     * @param {any} [forceDevice] device whose states are written even if unchanged (confirms commands)
+     */
+    async pollAll(forceDevice) {
+        try {
+            const acs = await this.httpCall('state', () => this.http.getDevices());
+            if (!acs) {
+                return false;
+            }
+            for (const ac of acs) {
+                const device = this.devices.get(ac.uniqueId);
+                if (!device || typeof ac.state !== 'string') {
+                    continue;
+                }
+                device.fcu.merge(FcuState.fromHex(ac.state));
+                await this.updateStates(device, ac.state, device === forceDevice);
+            }
+            return true;
+        } catch (e) {
+            this.log.warn(`State update failed: ${e.message}`);
             return false;
         }
-        device.fcu.merge(FcuState.fromHex(res.state));
-        await this.updateStates(device, res.state, force);
-        if (withModels) {
-            await this.setStateAsync(`${device.id}.info.indoorUnitModel`, res.fcuModel || '', true);
-            await this.setStateAsync(`${device.id}.info.outdoorUnitModel`, res.cduModel || '', true);
-        }
-        return true;
     }
 
-    async pollAll(withModels = false) {
+    /**
+     * Model names of indoor and outdoor units are only available from GetCurrentACState.
+     * The Toshiba cloud answers this request with HTTP 403 for some units (seen for the
+     * indoor units of a multi split system), so it is only tried once per unit at start
+     * and failures are logged at debug level.
+     */
+    async loadModelInfo() {
+        const clean = v => (typeof v === 'string' && v && v.toUpperCase() !== 'NULL' ? v : '');
         for (const device of this.devices.values()) {
             try {
-                if (!(await this.pollDevice(device, withModels))) {
-                    return; // rate limit pause
-                }
+                const res = await this.http.getDeviceState(device.acId);
+                await this.setStateAsync(`${device.id}.info.indoorUnitModel`, clean(res.fcuModel), true);
+                await this.setStateAsync(`${device.id}.info.outdoorUnitModel`, clean(res.cduModel), true);
             } catch (e) {
-                this.log.warn(`${device.name}: state update failed: ${e.message}`);
+                this.log.debug(`${device.name}: model names not available from Toshiba cloud (${e.message})`);
             }
         }
     }
@@ -562,7 +587,7 @@ class ToshibaAc extends utils.Adapter {
             return;
         }
         try {
-            const energy = await this.httpCall(() => this.http.getEnergyConsumption(ids));
+            const energy = await this.httpCall('energy', () => this.http.getEnergyConsumption(ids));
             if (!energy) {
                 return;
             }
@@ -612,9 +637,7 @@ class ToshibaAc extends utils.Adapter {
             this.clearConfirmTimer(device);
             device.confirmTimer = this.setTimeout(() => {
                 device.confirmTimer = null;
-                this.pollDevice(device, false, true).catch(e =>
-                    this.log.debug(`${device.name}: refresh failed: ${e.message}`),
-                );
+                this.pollAll(device);
             }, CONFIRM_TIMEOUT_MS);
         } catch (e) {
             this.log.warn(`${device.name}: cannot set ${key} to ${state.val}: ${e.message}`);
