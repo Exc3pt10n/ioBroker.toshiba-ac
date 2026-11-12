@@ -99,7 +99,7 @@ test('user command is encoded and sent', async () => {
     await adapter.onStateChange('toshiba-ac.0.Wohnzimmer.mode', { val: 'HEAT', ack: false });
     assert.deepEqual(
         sent.map(s => s.hex),
-        ['ffff18' + 'f'.repeat(32), '31' + 'f'.repeat(36), 'ff43' + 'f'.repeat(34)],
+        [`ffff18${'f'.repeat(32)}`, `31${'f'.repeat(36)}`, `ff43${'f'.repeat(34)}`],
     );
     assert.equal(sent[0].id, 'u-1');
     for (const d of adapter.devices.values()) {
@@ -155,4 +155,23 @@ test('rate limit pauses polling and triggers re-login afterwards', async () => {
     assert.equal(stateCalls, 2);
     assert.equal(logins, 1);
     assert.equal(adapter.states['Wohnzimmer.power'].val, false);
+});
+
+test('SAS token is reused while valid', async () => {
+    const { adapter } = await setup();
+    let registrations = 0;
+    const se = Math.floor(Date.now() / 1000) + 3600;
+    adapter.http = {
+        registerClient: async id => {
+            registrations++;
+            return `SharedAccessSignature sr=hub%2Fdevices%2F${id}&sig=x&se=${se}`;
+        },
+    };
+    const a = await adapter.getSasToken('ioBroker-1');
+    const b = await adapter.getSasToken('ioBroker-1');
+    assert.equal(a, b);
+    assert.equal(registrations, 1);
+    adapter.sasExpiry = Date.now() + 60000; // about to expire
+    await adapter.getSasToken('ioBroker-1');
+    assert.equal(registrations, 2);
 });

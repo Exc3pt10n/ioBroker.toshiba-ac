@@ -15,7 +15,7 @@ temperature, fan, swing, special modes and (if supported) energy consumption.*
 * Klimageräte, die bereits in der App **Toshiba Home AC Control** eingerichtet sind und dort funktionieren
   (WLAN-Adapter RB-N101S-G / RB-N106S-G oder integriertes WLAN, z. B. Shorai Edge, Seiya, Daiseikai, Haori).
 * Benutzername (E-Mail) und Passwort des App-Kontos.
-* Node.js ≥ 20, js-controller ≥ 5.
+* Node.js ≥ 22, js-controller ≥ 5.
 * Ausgehende Verbindungen zu `mobileapi.toshibahomeaccontrols.com` (HTTPS) und
   `toshibasmaciothubv1.azure-devices.net` (MQTT, Port 8883 – alternativ WebSocket über Port 443).
 
@@ -99,12 +99,20 @@ Open-Source-Python-Bibliothek [toshiba-ac](https://github.com/KaSroka/Toshiba-AC
 
 ## Fehlersuche
 
+* **Nur eine aktive Verbindung pro Konto:** Laut Erfahrungen anderer Integrationen akzeptiert die Toshiba-Cloud pro Konto nur eine aktive Sitzung. Ist die App gleichzeitig offen, können Befehle oder Abfragen scheitern. Abhilfe: In der App ein zweites Konto anlegen und die Geräte dafür freigeben, oder die App nur selten nutzen.
+
 * **„Login failed“**: Zugangsdaten prüfen – mit denselben Daten in der App an- und abmelden.
 * **Keine Echtzeit-Updates / `info.connection` bleibt `false`**: Port 8883 gesperrt? Option „MQTT über WebSocket“ aktivieren.
 * **HTTP 403 / 429**: Die Toshiba-Cloud begrenzt die Anfragerate. Der Adapter wartet dann mindestens 10 Minuten; das Abfrageintervall nicht zu klein wählen.
 * Für Details die Instanz auf Log-Level `debug` stellen; die rohen Zustände stehen auch in `info.rawState`.
 
 ## Changelog
+
+### 0.1.3 (2026-11-12)
+* HTTP 403 bei `GetCurrentACState` / Energieverbrauch behoben: Der Adapter nutzt jetzt eine einzige Kennung (`ioBroker-<clientId>`) für `Device-ID`-Header, Geräteregistrierung und IoT Hub
+* SAS-Token wird wiederverwendet, solange es gültig ist
+* Antworttext abgelehnter Anfragen im Debug-Log
+* Mindestens Node.js 22 erforderlich
 
 ### 0.1.2 (2026-11-11)
 * HTTP 403 der Toshiba-Cloud vermeiden: mind. 1 s Abstand zwischen Anfragen, Erstabfrage nach 30 s, Energieverbrauch nach 90 s

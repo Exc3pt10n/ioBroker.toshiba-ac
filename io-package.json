@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "toshiba-ac",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "news": {
+      "0.1.3": {
+        "en": "Fix HTTP 403 on state/energy requests: use the same device id for Device-ID header, registration and IoT Hub; reuse SAS token",
+        "de": "HTTP 403 bei Zustands-/Energieabfrage behoben: dieselbe Geräte-ID für Device-ID-Header, Registrierung und IoT Hub; SAS-Token wiederverwenden"
+      },
       "0.1.2": {
         "en": "Avoid HTTP 403 from the Toshiba cloud: spread out requests, delayed initial refresh, pause polling after rate limit",
         "de": "HTTP 403 der Toshiba-Cloud vermeiden: Anfragen entzerrt, verzögerte Erstabfrage, Pause nach Ratenbegrenzung"

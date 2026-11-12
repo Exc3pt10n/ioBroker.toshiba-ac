@@ -77,9 +77,9 @@ const MAX_RATE_LIMIT_PAUSE_MS = 60 * 60000;
 class ToshibaAc extends utils.Adapter {
     constructor(options = {}) {
         super({ ...options, name: 'toshiba-ac' });
-        /** @type {Map<string, any>} uniqueId -> device */
+        /** uniqueId -> device */
         this.devices = new Map();
-        /** @type {Map<string, string>} object id prefix -> uniqueId */
+        /** object id prefix -> uniqueId */
         this.idToUnique = new Map();
         this.http = null;
         this.iot = null;
@@ -92,6 +92,9 @@ class ToshibaAc extends utils.Adapter {
         this.rateLimitUntil = 0;
         this.rateLimitBackoff = RATE_LIMIT_PAUSE_MS;
         this.reloginNeeded = false;
+        this.sasToken = null;
+        this.sasDeviceId = null;
+        this.sasExpiry = 0;
         this.unloading = false;
 
         this.on('ready', this.onReady.bind(this));
@@ -103,7 +106,9 @@ class ToshibaAc extends utils.Adapter {
         await this.setStateAsync('info.connection', false, true);
 
         if (!this.config.username || !this.config.password) {
-            this.log.error('Please enter user name and password of your Toshiba Home AC Control account in the adapter settings.');
+            this.log.error(
+                'Please enter user name and password of your Toshiba Home AC Control account in the adapter settings.',
+            );
             return;
         }
 
@@ -139,10 +144,12 @@ class ToshibaAc extends utils.Adapter {
     }
 
     async initialize() {
-        const clientId = await this.getClientId();
-        const deviceId = `${this.config.username}_${clientId}`;
+        // One identifier for everything: Device-ID header, device registration and IoT Hub
+        // sourceId. The Toshiba cloud rejects requests (HTTP 403) once the Device-ID header
+        // does not match the registered mobile device.
+        const deviceId = `ioBroker-${await this.getClientId()}`;
 
-        this.http = new ToshibaHttpApi(this.config.username, this.config.password, this.log, clientId);
+        this.http = new ToshibaHttpApi(this.config.username, this.config.password, this.log, deviceId);
         await this.http.login();
         this.log.info('Logged in to Toshiba Home AC Control cloud');
 
@@ -158,9 +165,11 @@ class ToshibaAc extends utils.Adapter {
             deviceId,
             useWebsocket: !!this.config.useWebsocket,
             log: this.log,
-            getSasToken: () => this.http.registerClient(deviceId),
+            getSasToken: () => this.getSasToken(deviceId),
         });
-        this.iot.on('command', msg => this.onCloudCommand(msg).catch(e => this.log.warn(`Error handling message: ${e.message}`)));
+        this.iot.on('command', msg =>
+            this.onCloudCommand(msg).catch(e => this.log.warn(`Error handling message: ${e.message}`)),
+        );
         this.iot.on('connection', connected => this.setState('info.connection', connected, true));
         this.iot.on('reconnected', () => this.pollAll());
         await this.iot.connect();
@@ -222,6 +231,22 @@ class ToshibaAc extends utils.Adapter {
         }
     }
 
+    /**
+     * Returns the IoT Hub SAS token. A token is reused while it is valid for at least
+     * 15 more minutes, because frequent registrations are answered with HTTP 429.
+     */
+    async getSasToken(deviceId) {
+        if (this.sasToken && this.sasDeviceId === deviceId && this.sasExpiry - Date.now() > 15 * 60000) {
+            return this.sasToken;
+        }
+        const token = await this.http.registerClient(deviceId);
+        const m = /[?&\s]se=(\d+)/.exec(` ${token}`);
+        this.sasToken = token;
+        this.sasDeviceId = deviceId;
+        this.sasExpiry = m ? parseInt(m[1], 10) * 1000 : Date.now() + 60 * 60000;
+        return token;
+    }
+
     /** Stable random id of this adapter instance used to register at the cloud. */
     async getClientId() {
         const state = await this.getStateAsync('info.clientId');
@@ -242,7 +267,9 @@ class ToshibaAc extends utils.Adapter {
             base = String(ac.uniqueId).replace(this.FORBIDDEN_CHARS, '_').replace(/\./g, '_');
         }
         if (this.idToUnique.has(base) && this.idToUnique.get(base) !== ac.uniqueId) {
-            base = `${base}_${String(ac.uniqueId).replace(/[^0-9a-zA-Z]/g, '').slice(0, 8)}`;
+            base = `${base}_${String(ac.uniqueId)
+                .replace(/[^0-9a-zA-Z]/g, '')
+                .slice(0, 8)}`;
         }
         return base;
     }
@@ -260,7 +287,9 @@ class ToshibaAc extends utils.Adapter {
         const device = { ...ac, id, features, fcu, confirmTimer: null };
         this.devices.set(ac.uniqueId, device);
         this.idToUnique.set(id, ac.uniqueId);
-        this.log.debug(`${ac.name}: model ${ac.modelId}, merit ${ac.meritFeature}, features ${JSON.stringify(features)}`);
+        this.log.debug(
+            `${ac.name}: model ${ac.modelId}, merit ${ac.meritFeature}, features ${JSON.stringify(features)}`,
+        );
 
         await this.extendObjectAsync(id, {
             type: 'device',
@@ -283,7 +312,13 @@ class ToshibaAc extends utils.Adapter {
             group: [{ en: 'Group in app', de: 'Gruppe in der App' }, ac.groupName],
         };
         for (const [key, [name, val]] of Object.entries(info)) {
-            await this.createState(`${id}.info.${key}`, { name, type: 'string', role: 'text', read: true, write: false });
+            await this.createState(`${id}.info.${key}`, {
+                name,
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: false,
+            });
             await this.setStateAsync(`${id}.info.${key}`, val === undefined || val === null ? '' : String(val), true);
         }
         await this.createState(`${id}.info.indoorUnitModel`, {
@@ -576,7 +611,9 @@ class ToshibaAc extends utils.Adapter {
             this.clearConfirmTimer(device);
             device.confirmTimer = this.setTimeout(() => {
                 device.confirmTimer = null;
-                this.pollDevice(device, false, true).catch(e => this.log.debug(`${device.name}: refresh failed: ${e.message}`));
+                this.pollDevice(device, false, true).catch(e =>
+                    this.log.debug(`${device.name}: refresh failed: ${e.message}`),
+                );
             }, CONFIRM_TIMEOUT_MS);
         } catch (e) {
             this.log.warn(`${device.name}: cannot set ${key} to ${state.val}: ${e.message}`);

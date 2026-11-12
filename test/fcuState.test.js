@@ -45,7 +45,7 @@ test('negative temperatures and "no value" markers', () => {
 test('partial command: only target temperature', () => {
     const c = new FcuState();
     c.set('temperature', 22);
-    assert.equal(c.encode(), 'ffff16' + 'f'.repeat(32));
+    assert.equal(c.encode(), `ffff16${'f'.repeat(32)}`);
     assert.equal(c.encode().length, 38);
 });
 
