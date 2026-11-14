@@ -24,10 +24,16 @@ temperature, fan, swing, special modes and (if supported) energy consumption.*
 ## Installation
 
 Solange der Adapter nicht im ioBroker-Repository ist, über „Adapter → Benutzerdefinierte Installation
-(Katze-Symbol) → Von GitHub / beliebige URL“ mit der URL dieses Repositories installieren, oder per Konsole:
+(Katze-Symbol) → Von GitHub / beliebige URL“ installieren, oder per Konsole. Stabile Version (letztes Release):
 
 ```bash
-iobroker url https://github.com/Exc3pt10n/ioBroker.toshiba-ac
+iobroker url https://github.com/Exc3pt10n/ioBroker.toshiba-ac/tarball/release
+```
+
+Aktueller Entwicklungsstand:
+
+```bash
+iobroker url https://github.com/Exc3pt10n/ioBroker.toshiba-ac/tarball/main
 ```
 
 Danach eine Instanz anlegen und die Zugangsdaten eintragen.
@@ -110,6 +116,9 @@ Open-Source-Python-Bibliothek [toshiba-ac](https://github.com/KaSroka/Toshiba-AC
 * Für Details die Instanz auf Log-Level `debug` stellen; die rohen Zustände stehen auch in `info.rawState`.
 
 ## Changelog
+
+### 0.1.7 (2026-11-14)
+* Versionshinweise von 0.1.6 in alle unterstützten Sprachen übersetzt (Voraussetzung für die Release-Prüfung der neuen Pipeline)
 
 ### 0.1.6 (2026-11-12)
 * Energieverbrauch: Die Toshiba-Cloud lehnt diese Abfrage für Fremd-Clients häufig mit HTTP 403 ab. Nur noch die erste Ablehnung einer Serie wird geloggt (als Info statt Warnung), neue Versuche werden bis auf alle 6 Stunden ausgedehnt, der letzte Wert bleibt erhalten. Klappt die Abfrage wieder, steht das im Log

@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "toshiba-ac",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "news": {
+      "0.1.7": {
+        "en": "Release notes of version 0.1.6 translated into all supported languages",
+        "de": "Versionshinweise von Version 0.1.6 in alle unterstützten Sprachen übersetzt",
+        "ru": "Примечания к версии 0.1.6 переведены на все поддерживаемые языки",
+        "pt": "Notas da versão 0.1.6 traduzidas para todos os idiomas suportados",
+        "nl": "Release-opmerkingen van versie 0.1.6 vertaald in alle ondersteunde talen",
+        "fr": "Notes de version de la version 0.1.6 traduites dans toutes les langues prises en charge",
+        "it": "Note di rilascio della versione 0.1.6 tradotte in tutte le lingue supportate",
+        "es": "Notas de la versión 0.1.6 traducidas a todos los idiomas compatibles",
+        "pl": "Informacje o wydaniu wersji 0.1.6 przetłumaczone na wszystkie obsługiwane języki",
+        "uk": "Примітки до версії 0.1.6 перекладено всіма підтримуваними мовами",
+        "zh-cn": "已将 0.1.6 版本的发布说明翻译为所有支持的语言"
+      },
       "0.1.6": {
         "en": "Energy consumption: the Toshiba cloud often rejects this request (HTTP 403); log the first rejection only (info), retry less often (up to every 6 h), keep the last value",
         "de": "Energieverbrauch: Die Toshiba-Cloud lehnt diese Abfrage oft ab (HTTP 403); nur die erste Ablehnung wird geloggt (Info), seltener neue Versuche (bis alle 6 h), letzter Wert bleibt erhalten",
