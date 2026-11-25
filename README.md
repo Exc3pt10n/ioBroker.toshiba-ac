@@ -2,155 +2,135 @@
 
 # ioBroker.toshiba-ac
 
-[![Test](https://github.com/Exc3pt10n/ioBroker.toshiba-ac/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/Exc3pt10n/ioBroker.toshiba-ac/actions/workflows/test.yml)
+[![Test and Release](https://github.com/Exc3pt10n/ioBroker.toshiba-ac/actions/workflows/test-and-release.yml/badge.svg?branch=main)](https://github.com/Exc3pt10n/ioBroker.toshiba-ac/actions/workflows/test-and-release.yml)
 
-Liest und steuert Toshiba Split-Klimaanlagen (Single- und Multi-Split) über die
-**Toshiba Home AC Control** Cloud, also dieselbe Cloud, die auch die iPhone- bzw.
-Android-App „Toshiba Home AC Control“ nutzt.
+Reads and controls Toshiba split air conditioners (single and multi split) via the
+**Toshiba Home AC Control** cloud – the same cloud that the Toshiba Home AC Control app
+([App Store](https://apps.apple.com/app/id1436487864)) uses. Every indoor unit appears as its own device with
+power, operating mode, temperatures, fan, swing, special modes and – if supported – energy consumption.
+Changes are pushed in real time.
 
-*English summary: ioBroker adapter for Toshiba air conditioners using the Toshiba Home AC Control cloud.
-Enter your app credentials, every indoor unit appears as its own device with power, mode,
-temperature, fan, swing, special modes and (if supported) energy consumption.*
+> **Development note:** this adapter was built with the help of **Claude** (AI by Anthropic, via Claude Code).
+> Requirements, testing on a real installation and review of every change are done by the maintainer.
 
-## Voraussetzungen
+## Requirements
 
-* Klimageräte, die bereits in der App **Toshiba Home AC Control** eingerichtet sind und dort funktionieren
-  (WLAN-Adapter RB-N101S-G / RB-N106S-G oder integriertes WLAN, z. B. Shorai Edge, Seiya, Daiseikai, Haori).
-* Benutzername (E-Mail) und Passwort des App-Kontos.
-* Node.js ≥ 22, js-controller ≥ 5.
-* Ausgehende Verbindungen zu `mobileapi.toshibahomeaccontrols.com` (HTTPS) und
-  `toshibasmaciothubv1.azure-devices.net` (MQTT, Port 8883 – alternativ WebSocket über Port 443).
+- Air conditioners that are already set up and working in the **Toshiba Home AC Control** app
+  (Wi-Fi adapter RB-N101S-G / RB-N106S-G or built-in Wi-Fi, e.g. Shorai Edge, Seiya, Daiseikai, Haori).
+- User name (e-mail) and password of the app account.
+- js-controller ≥ 6.0.11, Admin ≥ 7.6.20, Node.js ≥ 22.
+- Outgoing connections to `mobileapi.toshibahomeaccontrols.com` (HTTPS) and
+  `toshibasmaciothubv1.azure-devices.net` (MQTT, port 8883 – alternatively WebSocket on port 443).
 
 ## Installation
 
-Solange der Adapter nicht im ioBroker-Repository ist, über „Adapter → Benutzerdefinierte Installation
-(Katze-Symbol) → Von GitHub / beliebige URL“ installieren, oder per Konsole. Stabile Version (letztes Release):
+Install the adapter like any other adapter from the ioBroker Admin interface (*Adapters*), then create an
+instance and enter the credentials of the Toshiba Home AC Control app.
 
-```bash
-iobroker url https://github.com/Exc3pt10n/ioBroker.toshiba-ac/tarball/release
-```
+## Configuration
 
-Aktueller Entwicklungsstand:
+| Setting | Default | Description |
+| --- | --- | --- |
+| User name / password | – | Credentials of the Toshiba Home AC Control app (the password is stored encrypted) |
+| State refresh interval | 10 min | Fallback polling via HTTP (1–1440 min). Changes normally arrive in real time. |
+| Energy consumption refresh | 30 min | Only for units with energy reporting (5–1440 min) |
+| MQTT over WebSocket | off | Enable if port 8883 is blocked in your network |
 
-```bash
-iobroker url https://github.com/Exc3pt10n/ioBroker.toshiba-ac/tarball/main
-```
+## Objects
 
-Danach eine Instanz anlegen und die Zugangsdaten eintragen.
+Every **indoor unit** appears as its own device, named after the unit name in the app
+(e.g. `toshiba-ac.0.Living_room`). In a **multi split system**, every indoor unit gets its own object tree.
 
-## Einstellungen
-
-| Option | Beschreibung |
-| --- | --- |
-| Benutzername / Passwort | Zugangsdaten der App „Toshiba Home AC Control“ (Passwort wird verschlüsselt gespeichert) |
-| Intervall Zustandsabfrage | Rückfall-Abfrage per HTTP (Standard 10 min). Änderungen kommen normalerweise in Echtzeit per Push. |
-| Intervall Energieverbrauch | Nur für Geräte mit Verbrauchsmessung (Standard 30 min) |
-| MQTT über WebSocket | Aktivieren, wenn Port 8883 in deinem Netzwerk gesperrt ist |
-
-## Objekte
-
-Jedes **Innengerät** erscheint als eigenes Gerät, benannt nach dem Namen aus der App
-(z. B. `toshiba-ac.0.Wohnzimmer`). Bei einer **Multi-Split-Anlage** bekommt also jedes Innengerät
-seinen eigenen Objektbaum.
-
-| State | Typ | Schreibbar | Beschreibung |
+| State | Type | Writable | Description |
 | --- | --- | --- | --- |
-| `power` | boolean | ✔ | Ein / Aus |
-| `mode` | string | ✔ | `AUTO`, `COOL` (Kühlen), `HEAT` (Heizen), `DRY` (Entfeuchten), `FAN` (Umluft) |
-| `targetTemperature` | number | ✔ | Solltemperatur in °C (17–30, im 8 °C-Frostschutzmodus 5–13) |
-| `indoorTemperature` | number | | Raumtemperatur in °C |
-| `outdoorTemperature` | number | | Außentemperatur in °C |
+| `power` | boolean | ✔ | On / off |
+| `mode` | number | ✔ | Operating mode: `1` AUTO, `2` COOL, `3` HEAT, `4` DRY, `5` FAN_ONLY |
+| `targetTemperature` | number | ✔ | Target temperature in °C (17–30, 5–13 in 8 °C frost protection mode) |
+| `indoorTemperature` | number | | Room temperature in °C |
+| `outdoorTemperature` | number | | Outdoor temperature in °C |
 | `fanMode` | string | ✔ | `AUTO`, `QUIET`, `LOW`, `MEDIUM_LOW`, `MEDIUM`, `MEDIUM_HIGH`, `HIGH` |
-| `swingMode` | string | ✔ | `OFF`, `SWING_VERTICAL`, `SWING_HORIZONTAL`, `SWING_VERTICAL_AND_HORIZONTAL`, `FIXED_1`…`FIXED_5` |
-| `powerSelection` | string | ✔ | Leistungsbegrenzung `POWER_50`, `POWER_75`, `POWER_100` |
-| `meritA` | string | ✔ | Sonderfunktion: `OFF`, `ECO`, `HIGH_POWER`, `CDU_SILENT_1/2` (leises Außengerät), `HEATING_8C` (8 °C Frostschutz), `SLEEP_CARE`, `FLOOR`, `COMFORT` |
-| `meritB` | string | ✔ | Kaminmodus `OFF`, `FIREPLACE_1`, `FIREPLACE_2` (nur wenn unterstützt) |
-| `airPureIon` | boolean | ✔ | Plasma-Ionisator / Luftreinigung (nur wenn unterstützt) |
-| `selfCleaning` | boolean | | Selbstreinigung läuft |
-| `energyConsumptionYear` | number | | Verbrauch im laufenden Jahr in Wh (nur wenn unterstützt) |
-| `info.*` | | | Name, IDs, Firmware, Modell Innen-/Außengerät (sofern die Cloud es liefert), Rohzustand, letzte Aktualisierung |
+| `swingMode` | string | ✔ | `OFF`, `SWING_VERTICAL`, `SWING_HORIZONTAL`, `SWING_VERTICAL_AND_HORIZONTAL`, `FIXED_1` … `FIXED_5` |
+| `powerSelection` | string | ✔ | Power limit `POWER_50`, `POWER_75`, `POWER_100` |
+| `meritA` | string | ✔ | Special mode: `OFF`, `ECO`, `HIGH_POWER`, `CDU_SILENT_1/2` (quiet outdoor unit), `HEATING_8C` (8 °C frost protection), `SLEEP_CARE`, `FLOOR`, `COMFORT` |
+| `meritB` | string | ✔ | Fireplace mode `OFF`, `FIREPLACE_1`, `FIREPLACE_2` (only if supported) |
+| `airPureIon` | boolean | ✔ | Plasma ion air purifier (only if supported) |
+| `selfCleaning` | boolean | | Self cleaning is running |
+| `energyConsumptionYear` | number | | Consumption of the current year in Wh (only if supported) |
+| `info.*` | | | Name, ids, firmware, indoor/outdoor unit model (if provided by the cloud), raw state, last update |
 
-Die Auswahllisten (`states`) der schreibbaren Objekte enthalten jeweils nur die Werte,
-die das jeweilige Gerät laut Cloud unterstützt.
+The value lists (`states`) of the writable objects only contain the values that the unit supports according
+to the cloud.
 
-Ein Wert, der mit `ack=false` gesetzt wird, wird an das Gerät gesendet. Sobald das Gerät
-die Änderung zurückmeldet, wird der State mit `ack=true` bestätigt. Kommt keine Bestätigung,
-liest der Adapter nach 15 Sekunden den tatsächlichen Zustand nach.
+A value written with `ack=false` is sent to the unit. As soon as the unit reports the change, the state is
+confirmed with `ack=true`. Without confirmation, the adapter reads the actual state after 15 seconds.
 
-### Beispiel (JavaScript-Adapter)
+### Example (JavaScript adapter)
 
 ```js
-// Wohnzimmer auf 22 °C heizen
-setState('toshiba-ac.0.Wohnzimmer.mode', 'HEAT');
-setState('toshiba-ac.0.Wohnzimmer.targetTemperature', 22);
-setState('toshiba-ac.0.Wohnzimmer.power', true);
+// heat the living room to 22 °C
+setState('toshiba-ac.0.Living_room.mode', 3); // HEAT
+setState('toshiba-ac.0.Living_room.targetTemperature', 22);
+setState('toshiba-ac.0.Living_room.power', true);
 ```
 
-## Hinweise zu Multi-Split-Anlagen
+## Multi split systems
 
-Alle Innengeräte einer Multi-Split-Anlage hängen am selben Außengerät. Dieses kann **nicht
-gleichzeitig heizen und kühlen**. Wird ein Innengerät in eine widersprüchliche Betriebsart
-geschaltet, übernimmt das Gerät die Änderung nicht bzw. zeigt einen Betriebsartenkonflikt an;
-der Adapter liest dann den tatsächlichen Zustand zurück.
+All indoor units of a multi split system share one outdoor unit, which **cannot heat and cool at the same
+time**. If an indoor unit is switched to a conflicting operating mode, the unit does not accept the change or
+shows a mode conflict; the adapter then reads back the actual state.
 
-## Funktionsweise
+## How it works
 
-1. Anmeldung an der Toshiba-REST-API (`mobileapi.toshibahomeaccontrols.com`) mit den App-Zugangsdaten.
-2. Der Adapter registriert sich wie ein weiteres Smartphone (eigene, zufällige Client-ID in `info.clientId`)
-   und erhält ein Zugangs-Token für den Azure IoT Hub von Toshiba.
-3. Über den IoT Hub (MQTT) kommen Zustandsänderungen und Temperaturen in Echtzeit; Befehle werden
-   ebenfalls darüber gesendet.
+1. Login to the Toshiba REST API (`mobileapi.toshibahomeaccontrols.com`) with the app credentials.
+2. The adapter registers like another smartphone (own random client id in `info.clientId`) and receives an
+   access token for Toshiba's Azure IoT Hub.
+3. State changes and temperatures arrive in real time via the IoT Hub (MQTT); commands are sent the same way.
 
-Das Protokoll ist nicht offiziell dokumentiert. Die Implementierung orientiert sich an der
-Open-Source-Python-Bibliothek [toshiba-ac](https://github.com/KaSroka/Toshiba-AC-control) von Kamil Sroka.
-Änderungen seitens Toshiba können die Funktion jederzeit beeinträchtigen.
+The protocol is not officially documented. The implementation follows the open source Python library
+[toshiba-ac](https://github.com/KaSroka/Toshiba-AC-control) by Kamil Sroka. Changes by Toshiba can affect
+the adapter at any time.
 
-## Fehlersuche
+## Troubleshooting
 
-* **Nur eine aktive Verbindung pro Konto:** Laut Erfahrungen anderer Integrationen akzeptiert die Toshiba-Cloud pro Konto nur eine aktive Sitzung. Ist die App gleichzeitig offen, können Befehle oder Abfragen scheitern. Abhilfe: In der App ein zweites Konto anlegen und die Geräte dafür freigeben, oder die App nur selten nutzen.
+- **Only one active session per account:** according to other integrations, the Toshiba cloud accepts only
+  one active session per account. If the app is open at the same time, commands or requests may fail.
+  Remedy: create a second account in the app and share the units with it, or use the app rarely.
+- **"Login failed":** check the credentials by logging out and in again in the app.
+- **No real-time updates / `info.connection` stays `false`:** port 8883 blocked? Enable "MQTT over WebSocket".
+- **HTTP 403 for the energy consumption:** the Toshiba cloud often rejects this request. The adapter retries
+  later; `energyConsumptionYear` keeps the last value until then.
+- **HTTP 403 / 429:** the Toshiba cloud limits the request rate. The adapter then waits at least 10 minutes;
+  do not choose a very short polling interval.
+- For details, set the instance log level to `debug`; the raw states are also in `info.rawState`.
 
-* **„Login failed“**: Zugangsdaten prüfen – mit denselben Daten in der App an- und abmelden.
-* **Keine Echtzeit-Updates / `info.connection` bleibt `false`**: Port 8883 gesperrt? Option „MQTT über WebSocket“ aktivieren.
-* **HTTP 403 beim Energieverbrauch**: Die Toshiba-Cloud lehnt diese Abfrage häufig ab. Der Adapter versucht es später erneut; `energyConsumptionYear` behält bis dahin den letzten Wert.
-* **HTTP 403 / 429**: Die Toshiba-Cloud begrenzt die Anfragerate. Der Adapter wartet dann mindestens 10 Minuten; das Abfrageintervall nicht zu klein wählen.
-* Für Details die Instanz auf Log-Level `debug` stellen; die rohen Zustände stehen auch in `info.rawState`.
+## Development
+
+See [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Changelog
 
-### 0.1.7 (2026-11-14)
-* Versionshinweise von 0.1.6 in alle unterstützten Sprachen übersetzt (Voraussetzung für die Release-Prüfung der neuen Pipeline)
+<!--
+    Placeholder for the next version (at the beginning of the line):
+    ### **WORK IN PROGRESS**
+-->
 
-### 0.1.6 (2026-11-12)
-* Energieverbrauch: Die Toshiba-Cloud lehnt diese Abfrage für Fremd-Clients häufig mit HTTP 403 ab. Nur noch die erste Ablehnung einer Serie wird geloggt (als Info statt Warnung), neue Versuche werden bis auf alle 6 Stunden ausgedehnt, der letzte Wert bleibt erhalten. Klappt die Abfrage wieder, steht das im Log
+### 0.2.0 (2026-11-25)
 
-### 0.1.5 (2026-11-12)
-* HTTP-403-Warnungen behoben: Die Toshiba-Cloud lehnt die Einzelabfrage `GetCurrentACState` für manche Innengeräte ab (beobachtet bei Multi-Split-Innengeräten). Zustände werden jetzt über die Geräteliste aktualisiert – eine Anfrage für alle Geräte
-* Modellnamen (`info.indoorUnitModel`/`info.outdoorUnitModel`) werden nur beim Start versucht und bleiben leer, wenn die Cloud sie nicht liefert
-* Zustandsabfrage und Energieverbrauch pausieren bei Ratenbegrenzung unabhängig voneinander
+- (Exc3pt10n) Published on npm. **Breaking** for testers who installed from GitHub (`…/tarball/main` or `…/tarball/release`): installing from GitHub is no longer possible, install the adapter from npm / the Admin interface instead
+- (Exc3pt10n) **Breaking:** `mode` is now a number with role `level.mode.airconditioner` (`1` AUTO, `2` COOL, `3` HEAT, `4` DRY, `5` FAN_ONLY). Scripts that write `'HEAT'` etc. keep working, but read the value as a number now
+- (Exc3pt10n) Object names in English; instance settings, title and description translated into all ioBroker languages
+- (Exc3pt10n) Configurable intervals are limited in the adapter as well (1–1440 / 5–1440 minutes)
+- (Exc3pt10n) An unsupported `meritB` state with custom settings (e.g. history) is kept read-only instead of being deleted
+- (Exc3pt10n) Unit names that differ only in upper/lower case get distinct object ids
+- (Exc3pt10n) Timers use the adapter's timer functions, so nothing keeps running after the instance stops
+- (Exc3pt10n) README in English, older changelog entries moved to `CHANGELOG_OLD.md`, developer notes to `DEVELOPMENT.md`
 
-### 0.1.4 (2026-11-12)
-* Fehler „Invalid Inputs“ bei der Geräteregistrierung behoben: Die Toshiba-Cloud akzeptiert nur Geräte-IDs der Form `<benutzername>_<id>`. Diese ID wird jetzt einheitlich auch im `Device-ID`-Header und für den IoT Hub verwendet
-* Fehlermeldungen der Cloud nennen den betroffenen Endpunkt
-
-### 0.1.3 (2026-11-12)
-* HTTP 403 bei `GetCurrentACState` / Energieverbrauch behoben: Der Adapter nutzt jetzt eine einzige Kennung (`ioBroker-<clientId>`) für `Device-ID`-Header, Geräteregistrierung und IoT Hub
-* SAS-Token wird wiederverwendet, solange es gültig ist
-* Antworttext abgelehnter Anfragen im Debug-Log
-* Mindestens Node.js 22 erforderlich
-
-### 0.1.2 (2026-11-11)
-* HTTP 403 der Toshiba-Cloud vermeiden: mind. 1 s Abstand zwischen Anfragen, Erstabfrage nach 30 s, Energieverbrauch nach 90 s
-* Nach 403/429 pausiert die Abfrage 10 min (verdoppelt sich bis 1 h), danach neuer Login; Echtzeit-Updates laufen weiter
-
-### 0.1.1 (2026-11-11)
-* Login-Fehler „HTTP 429“ behoben: Die Toshiba-Cloud verlangt seit Mitte 2026 einen `Device-ID`-Header
-* Bei Ratenbegrenzung (403/429) wird mindestens 10 Minuten gewartet
-
-### 0.1.0 (2026-11-11)
-* Erste Version: Auslesen und Steuern über die Toshiba Home AC Control Cloud, Echtzeit-Updates per Azure IoT Hub, Energieverbrauch
+Older changes: [CHANGELOG_OLD.md](CHANGELOG_OLD.md)
 
 ## License
 
-MIT License, Copyright (c) 2026 Exc3pt10n
+MIT License – see [LICENSE](LICENSE).
 
-Dieses Projekt steht in keiner Verbindung zur Toshiba Corporation. „Toshiba“ ist eine Marke der jeweiligen Inhaber.
+Copyright (c) 2026 Exc3pt10n <kontakt@jansesoft.de>
+
+This project is not affiliated with Toshiba Corporation. "Toshiba" is a trademark of its respective owners.

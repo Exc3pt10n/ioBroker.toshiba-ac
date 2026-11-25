@@ -1,149 +1,125 @@
 {
-  "common": {
-    "name": "toshiba-ac",
-    "version": "0.1.7",
-    "news": {
-      "0.1.7": {
-        "en": "Release notes of version 0.1.6 translated into all supported languages",
-        "de": "Versionshinweise von Version 0.1.6 in alle unterstützten Sprachen übersetzt",
-        "ru": "Примечания к версии 0.1.6 переведены на все поддерживаемые языки",
-        "pt": "Notas da versão 0.1.6 traduzidas para todos os idiomas suportados",
-        "nl": "Release-opmerkingen van versie 0.1.6 vertaald in alle ondersteunde talen",
-        "fr": "Notes de version de la version 0.1.6 traduites dans toutes les langues prises en charge",
-        "it": "Note di rilascio della versione 0.1.6 tradotte in tutte le lingue supportate",
-        "es": "Notas de la versión 0.1.6 traducidas a todos los idiomas compatibles",
-        "pl": "Informacje o wydaniu wersji 0.1.6 przetłumaczone na wszystkie obsługiwane języki",
-        "uk": "Примітки до версії 0.1.6 перекладено всіма підтримуваними мовами",
-        "zh-cn": "已将 0.1.6 版本的发布说明翻译为所有支持的语言"
-      },
-      "0.1.6": {
-        "en": "Energy consumption: the Toshiba cloud often rejects this request (HTTP 403); log the first rejection only (info), retry less often (up to every 6 h), keep the last value",
-        "de": "Energieverbrauch: Die Toshiba-Cloud lehnt diese Abfrage oft ab (HTTP 403); nur die erste Ablehnung wird geloggt (Info), seltener neue Versuche (bis alle 6 h), letzter Wert bleibt erhalten",
-        "ru": "Потребление энергии: облако Toshiba часто отклоняет этот запрос (HTTP 403); в журнал записывается только первый отказ (info), повторные попытки реже (до одного раза в 6 ч), последнее значение сохраняется",
-        "pt": "Consumo de energia: a nuvem da Toshiba rejeita frequentemente este pedido (HTTP 403); apenas a primeira rejeição é registada (info), novas tentativas menos frequentes (até a cada 6 h), o último valor é mantido",
-        "nl": "Energieverbruik: de Toshiba-cloud weigert dit verzoek vaak (HTTP 403); alleen de eerste weigering wordt gelogd (info), minder vaak opnieuw proberen (tot elke 6 uur), de laatste waarde blijft behouden",
-        "fr": "Consommation d'énergie : le cloud Toshiba rejette souvent cette requête (HTTP 403) ; seul le premier rejet est journalisé (info), nouvelles tentatives moins fréquentes (jusqu'à toutes les 6 h), la dernière valeur est conservée",
-        "it": "Consumo energetico: il cloud Toshiba rifiuta spesso questa richiesta (HTTP 403); viene registrato solo il primo rifiuto (info), nuovi tentativi meno frequenti (fino a ogni 6 h), l'ultimo valore viene mantenuto",
-        "es": "Consumo de energía: la nube de Toshiba rechaza a menudo esta solicitud (HTTP 403); solo se registra el primer rechazo (info), reintentos menos frecuentes (hasta cada 6 h), se conserva el último valor",
-        "pl": "Zużycie energii: chmura Toshiba często odrzuca to zapytanie (HTTP 403); rejestrowane jest tylko pierwsze odrzucenie (info), rzadsze ponowne próby (do co 6 h), ostatnia wartość zostaje zachowana",
-        "uk": "Споживання енергії: хмара Toshiba часто відхиляє цей запит (HTTP 403); у журнал записується лише перша відмова (info), повторні спроби рідше (до одного разу на 6 год), останнє значення зберігається",
-        "zh-cn": "能耗：Toshiba 云经常拒绝此请求（HTTP 403）；仅记录第一次拒绝（info），降低重试频率（最长每 6 小时一次），保留上一次的数值"
-      },
-      "0.1.5": {
-        "en": "Fix HTTP 403 warnings: refresh states via the device list (one request for all units); model names are best effort, as the cloud rejects them for some units (e.g. multi split)",
-        "de": "HTTP-403-Warnungen behoben: Zustände über die Geräteliste aktualisieren (eine Anfrage für alle Geräte); Modellnamen nur, wenn die Cloud sie liefert (bei manchen Geräten, z. B. Multi-Split, abgelehnt)"
-      },
-      "0.1.4": {
-        "en": "Fix \"Invalid Inputs\" on device registration: use <username>_<id> as device id (also for the Device-ID header)",
-        "de": "\"Invalid Inputs\" bei der Geräteregistrierung behoben: <benutzername>_<id> als Geräte-ID (auch im Device-ID-Header)"
-      },
-      "0.1.3": {
-        "en": "Fix HTTP 403 on state/energy requests: use the same device id for Device-ID header, registration and IoT Hub; reuse SAS token",
-        "de": "HTTP 403 bei Zustands-/Energieabfrage behoben: dieselbe Geräte-ID für Device-ID-Header, Registrierung und IoT Hub; SAS-Token wiederverwenden"
-      },
-      "0.1.2": {
-        "en": "Avoid HTTP 403 from the Toshiba cloud: spread out requests, delayed initial refresh, pause polling after rate limit",
-        "de": "HTTP 403 der Toshiba-Cloud vermeiden: Anfragen entzerrt, verzögerte Erstabfrage, Pause nach Ratenbegrenzung"
-      },
-      "0.1.1": {
-        "en": "Fix login (HTTP 429): send Device-ID header required by the Toshiba cloud; longer back-off when rate limited",
-        "de": "Login-Fehler (HTTP 429) behoben: von der Toshiba-Cloud geforderten Device-ID-Header senden; längere Wartezeit bei Ratenbegrenzung"
-      },
-      "0.1.0": {
-        "en": "Initial release",
-        "de": "Erste Version"
-      }
+    "common": {
+        "name": "toshiba-ac",
+        "version": "0.2.0",
+        "news": {
+            "0.2.0": {
+                "en": "Available on npm instead of GitHub (Breaking for installations from GitHub: install from npm). English documentation, settings in all languages, adapter review findings fixed",
+                "de": "Auf npm statt GitHub verfügbar (Breaking für Installationen aus GitHub: von npm installieren). Englische Dokumentation, Einstellungen in allen Sprachen, Funde aus dem Adapter-Review behoben",
+                "ru": "Доступен в npm вместо GitHub (Breaking для установок из GitHub: устанавливайте из npm). Документация на английском, настройки на всех языках, исправлены замечания ревью адаптера",
+                "pt": "Disponível no npm em vez do GitHub (Breaking para instalações a partir do GitHub: instalar a partir do npm). Documentação em inglês, definições em todos os idiomas, problemas da revisão do adaptador corrigidos",
+                "nl": "Beschikbaar via npm in plaats van GitHub (Breaking voor installaties vanaf GitHub: installeer vanaf npm). Engelse documentatie, instellingen in alle talen, bevindingen uit de adapterreview opgelost",
+                "fr": "Disponible sur npm au lieu de GitHub (Breaking pour les installations depuis GitHub : installer depuis npm). Documentation en anglais, paramètres dans toutes les langues, remarques de la revue de l'adaptateur corrigées",
+                "it": "Disponibile su npm invece che su GitHub (Breaking per installazioni da GitHub: installare da npm). Documentazione in inglese, impostazioni in tutte le lingue, risolti i rilievi della revisione dell'adattatore",
+                "es": "Disponible en npm en lugar de GitHub (Breaking para instalaciones desde GitHub: instalar desde npm). Documentación en inglés, ajustes en todos los idiomas, corregidos los hallazgos de la revisión del adaptador",
+                "pl": "Dostępny w npm zamiast GitHub (Breaking dla instalacji z GitHub: instaluj z npm). Dokumentacja po angielsku, ustawienia we wszystkich językach, poprawione uwagi z przeglądu adaptera",
+                "uk": "Доступний у npm замість GitHub (Breaking для встановлень із GitHub: встановлюйте з npm). Документація англійською, налаштування всіма мовами, виправлено зауваження ревʼю адаптера",
+                "zh-cn": "改为通过 npm 而非 GitHub 提供（对从 GitHub 安装的用户为 Breaking：请从 npm 安装）。英文文档，所有语言的设置，修复适配器审查中发现的问题"
+            }
+        },
+        "titleLang": {
+            "en": "Toshiba air conditioner",
+            "de": "Toshiba Klimaanlage",
+            "ru": "Кондиционер Toshiba",
+            "pt": "Ar condicionado Toshiba",
+            "nl": "Toshiba airconditioner",
+            "fr": "Climatiseur Toshiba",
+            "it": "Condizionatore Toshiba",
+            "es": "Aire acondicionado Toshiba",
+            "pl": "Klimatyzator Toshiba",
+            "uk": "Кондиціонер Toshiba",
+            "zh-cn": "东芝空调"
+        },
+        "desc": {
+            "en": "Read and control Toshiba air conditioners via the Toshiba Home AC Control cloud",
+            "de": "Toshiba Klimaanlagen über die Toshiba Home AC Control Cloud auslesen und steuern",
+            "ru": "Чтение и управление кондиционерами Toshiba через облако Toshiba Home AC Control",
+            "pt": "Ler e controlar aparelhos de ar condicionado Toshiba através da nuvem Toshiba Home AC Control",
+            "nl": "Toshiba-airconditioners uitlezen en bedienen via de Toshiba Home AC Control-cloud",
+            "fr": "Lire et commander les climatiseurs Toshiba via le cloud Toshiba Home AC Control",
+            "it": "Leggere e controllare i condizionatori Toshiba tramite il cloud Toshiba Home AC Control",
+            "es": "Leer y controlar aires acondicionados Toshiba a través de la nube Toshiba Home AC Control",
+            "pl": "Odczyt i sterowanie klimatyzatorami Toshiba przez chmurę Toshiba Home AC Control",
+            "uk": "Зчитування та керування кондиціонерами Toshiba через хмару Toshiba Home AC Control",
+            "zh-cn": "通过 Toshiba Home AC Control 云读取和控制东芝空调"
+        },
+        "authors": ["Exc3pt10n <kontakt@jansesoft.de>"],
+        "keywords": ["toshiba", "air conditioner", "climate", "heat pump"],
+        "licenseInformation": {
+            "type": "free",
+            "license": "MIT"
+        },
+        "platform": "Javascript/Node.js",
+        "icon": "toshiba-ac.png",
+        "extIcon": "https://raw.githubusercontent.com/Exc3pt10n/ioBroker.toshiba-ac/main/admin/toshiba-ac.png",
+        "readme": "https://github.com/Exc3pt10n/ioBroker.toshiba-ac/blob/main/README.md",
+        "loglevel": "info",
+        "tier": 2,
+        "mode": "daemon",
+        "type": "climate-control",
+        "compact": true,
+        "connectionType": "cloud",
+        "dataSource": "push",
+        "adminUI": {
+            "config": "json"
+        },
+        "enabled": true,
+        "dependencies": [
+            {
+                "js-controller": ">=6.0.11"
+            }
+        ],
+        "globalDependencies": [
+            {
+                "admin": ">=7.6.20"
+            }
+        ],
+        "nogit": true
     },
-    "titleLang": {
-      "en": "Toshiba air conditioner",
-      "de": "Toshiba Klimaanlage"
+    "encryptedNative": ["password"],
+    "protectedNative": ["password"],
+    "native": {
+        "username": "",
+        "password": "",
+        "pollInterval": 10,
+        "energyInterval": 30,
+        "useWebsocket": false
     },
-    "desc": {
-      "en": "Read and control Toshiba air conditioners via the Toshiba Home AC Control cloud",
-      "de": "Toshiba Klimaanlagen über die Toshiba Home AC Control Cloud auslesen und steuern"
-    },
-    "authors": ["Exc3pt10n"],
-    "keywords": ["toshiba", "air conditioner", "klimaanlage", "climate", "heat pump"],
-    "licenseInformation": {
-      "type": "free",
-      "license": "MIT"
-    },
-    "platform": "Javascript/Node.js",
-    "icon": "toshiba-ac.png",
-    "extIcon": "https://raw.githubusercontent.com/Exc3pt10n/ioBroker.toshiba-ac/main/admin/toshiba-ac.png",
-    "readme": "https://github.com/Exc3pt10n/ioBroker.toshiba-ac/blob/main/README.md",
-    "loglevel": "info",
-    "tier": 2,
-    "mode": "daemon",
-    "type": "climate-control",
-    "compact": true,
-    "connectionType": "cloud",
-    "dataSource": "push",
-    "adminUI": {
-      "config": "json"
-    },
-    "enabled": true,
-    "dependencies": [
-      {
-        "js-controller": ">=5.0.19"
-      }
-    ],
-    "globalDependencies": [
-      {
-        "admin": ">=6.13.16"
-      }
+    "objects": [],
+    "instanceObjects": [
+        {
+            "_id": "info",
+            "type": "channel",
+            "common": {
+                "name": "Information"
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.connection",
+            "type": "state",
+            "common": {
+                "role": "indicator.connected",
+                "name": "Connected to Toshiba cloud",
+                "type": "boolean",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.clientId",
+            "type": "state",
+            "common": {
+                "role": "text",
+                "name": "Client id used to register at the Toshiba cloud",
+                "type": "string",
+                "read": true,
+                "write": false,
+                "def": ""
+            },
+            "native": {}
+        }
     ]
-  },
-  "encryptedNative": ["password"],
-  "protectedNative": ["password"],
-  "native": {
-    "username": "",
-    "password": "",
-    "pollInterval": 10,
-    "energyInterval": 30,
-    "useWebsocket": false
-  },
-  "objects": [],
-  "instanceObjects": [
-    {
-      "_id": "info",
-      "type": "channel",
-      "common": {
-        "name": "Information"
-      },
-      "native": {}
-    },
-    {
-      "_id": "info.connection",
-      "type": "state",
-      "common": {
-        "role": "indicator.connected",
-        "name": {
-          "en": "Connected to Toshiba cloud",
-          "de": "Mit Toshiba Cloud verbunden"
-        },
-        "type": "boolean",
-        "read": true,
-        "write": false,
-        "def": false
-      },
-      "native": {}
-    },
-    {
-      "_id": "info.clientId",
-      "type": "state",
-      "common": {
-        "role": "text",
-        "name": {
-          "en": "Client id used to register at the Toshiba cloud",
-          "de": "Client-ID für die Registrierung an der Toshiba Cloud"
-        },
-        "type": "string",
-        "read": true,
-        "write": false,
-        "def": ""
-      },
-      "native": {}
-    }
-  ]
 }

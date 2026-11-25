@@ -22,6 +22,9 @@ class FakeAdapter extends EventEmitter {
     async extendObjectAsync(id, obj) {
         this.objects[id] = { ...(this.objects[id] || {}), ...obj };
     }
+    async getObjectAsync(id) {
+        return this.objects[id] || null;
+    }
     async delObjectAsync(id) {
         if (!this.objects[id]) {
             throw new Error('not found');
@@ -86,17 +89,18 @@ test('creates objects and initial states', async () => {
     const { adapter } = await setup();
     assert.equal(adapter.objects.Wohnzimmer.type, 'device');
     assert.equal(adapter.states['Wohnzimmer.power'].val, true);
-    assert.equal(adapter.states['Wohnzimmer.mode'].val, 'COOL');
+    assert.equal(adapter.states['Wohnzimmer.mode'].val, 2);
     assert.equal(adapter.states['Wohnzimmer.targetTemperature'].val, 22);
     assert.equal(adapter.states['Wohnzimmer.outdoorTemperature'].val, 11);
-    assert.ok(adapter.objects['Wohnzimmer.mode'].common.states.HEAT);
+    assert.equal(adapter.objects['Wohnzimmer.mode'].common.states[3], 'HEAT');
+    assert.equal(adapter.objects['Wohnzimmer.mode'].common.type, 'number');
 });
 
 test('user command is encoded and sent', async () => {
     const { adapter, sent } = await setup();
     await adapter.onStateChange('toshiba-ac.0.Wohnzimmer.targetTemperature', { val: 24, ack: false });
     await adapter.onStateChange('toshiba-ac.0.Wohnzimmer.power', { val: false, ack: false });
-    await adapter.onStateChange('toshiba-ac.0.Wohnzimmer.mode', { val: 'HEAT', ack: false });
+    await adapter.onStateChange('toshiba-ac.0.Wohnzimmer.mode', { val: 3, ack: false });
     assert.deepEqual(
         sent.map(s => s.hex),
         [`ffff18${'f'.repeat(32)}`, `31${'f'.repeat(36)}`, `ff43${'f'.repeat(34)}`],
@@ -123,7 +127,7 @@ test('push update from cloud updates states', async () => {
         payload: { data: '3143ffffffffffffffffffffffffffffffffff' },
     });
     assert.equal(adapter.states['Wohnzimmer.power'].val, false);
-    assert.equal(adapter.states['Wohnzimmer.mode'].val, 'HEAT');
+    assert.equal(adapter.states['Wohnzimmer.mode'].val, 3);
     assert.equal(adapter.states['Wohnzimmer.targetTemperature'].val, 22);
 
     await adapter.onCloudCommand({ sourceId: 'u-1', cmd: 'CMD_HEARTBEAT', payload: { iTemp: '15', oTemp: 'fd' } });
@@ -247,4 +251,43 @@ test('energy: rejection logged once, quiet afterwards, longer back-off, recovery
     await adapter.updateEnergy();
     assert.equal(adapter.states['Energie.energyConsumptionYear'].val, 500);
     assert.match(logs.info[1], /answered again/);
+});
+
+test('operating mode uses the air conditioner role, names are English', async () => {
+    const { adapter } = await setup();
+    assert.equal(adapter.objects['Wohnzimmer.mode'].common.role, 'level.mode.airconditioner');
+    assert.equal(adapter.objects['Wohnzimmer.power'].common.name, 'Power');
+    assert.equal(adapter.objects['Wohnzimmer.info.acId'].common.name, 'AC id');
+});
+
+test('unsupported state is kept read-only when it has custom settings', async () => {
+    const { adapter } = await setup();
+    adapter.objects['Wohnzimmer.meritB'] = { type: 'state', common: { custom: { 'history.0': { enabled: true } } } };
+    await adapter.removeUnusedState('Wohnzimmer.meritB');
+    assert.ok(adapter.objects['Wohnzimmer.meritB']);
+    assert.equal(adapter.objects['Wohnzimmer.meritB'].common.write, false);
+    adapter.objects['Wohnzimmer.fanMode'] = { type: 'state', common: {} };
+    await adapter.removeUnusedState('Wohnzimmer.fanMode');
+    assert.equal(adapter.objects['Wohnzimmer.fanMode'], undefined);
+});
+
+test('device ids differing only in casing get a unique suffix', async () => {
+    const { adapter } = await setup();
+    const id = adapter.makeDeviceId({ name: 'wohnzimmer', uniqueId: 'abc-12345678-x' });
+    assert.notEqual(id.toLowerCase(), 'wohnzimmer');
+    assert.match(id, /^wohnzimmer_/);
+    assert.equal(adapter.makeDeviceId({ name: 'Wohnzimmer', uniqueId: 'u-1' }), 'Wohnzimmer');
+});
+
+test('mode accepts names for convenience and rejects unknown values', async () => {
+    const { adapter, sent } = await setup();
+    await adapter.onStateChange('toshiba-ac.0.Wohnzimmer.mode', { val: 'FAN_ONLY', ack: false });
+    await adapter.onStateChange('toshiba-ac.0.Wohnzimmer.mode', { val: 9, ack: false });
+    assert.deepEqual(
+        sent.map(s => s.hex),
+        [`ff45${'f'.repeat(34)}`],
+    );
+    for (const d of adapter.devices.values()) {
+        adapter.clearConfirmTimer(d);
+    }
 });

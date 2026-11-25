@@ -1,0 +1,13 @@
+{
+    "Toshiba Home AC Control account": "Konto Toshiba Home AC Control",
+    "Use the same e-mail / user name and password as in the 'Toshiba Home AC Control' app.": "Użyj tego samego e-maila / nazwy użytkownika i hasła co w aplikacji 'Toshiba Home AC Control'.",
+    "User name": "Nazwa użytkownika",
+    "Password": "Hasło",
+    "Options": "Opcje",
+    "State refresh interval (minutes)": "Interwał odświeżania stanu (minuty)",
+    "Changes are pushed in real time. Polling is only a fallback.": "Zmiany są przesyłane w czasie rzeczywistym. Odpytywanie służy tylko jako rezerwa.",
+    "Energy consumption refresh (minutes)": "Odświeżanie zużycia energii (minuty)",
+    "Only for units supporting energy reporting": "Tylko dla urządzeń z pomiarem zużycia",
+    "Use MQTT over WebSocket (port 443)": "Użyj MQTT przez WebSocket (port 443)",
+    "Enable if port 8883 is blocked in your network": "Włącz, jeśli port 8883 jest zablokowany w Twojej sieci"
+}

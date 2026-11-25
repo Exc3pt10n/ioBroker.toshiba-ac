@@ -1,0 +1,13 @@
+{
+    "Toshiba Home AC Control account": "Toshiba Home AC Control 账户",
+    "Use the same e-mail / user name and password as in the 'Toshiba Home AC Control' app.": "请使用与 'Toshiba Home AC Control' 应用相同的电子邮件 / 用户名和密码。",
+    "User name": "用户名",
+    "Password": "密码",
+    "Options": "选项",
+    "State refresh interval (minutes)": "状态刷新间隔（分钟）",
+    "Changes are pushed in real time. Polling is only a fallback.": "变更会实时推送。轮询仅作为后备。",
+    "Energy consumption refresh (minutes)": "能耗刷新间隔（分钟）",
+    "Only for units supporting energy reporting": "仅适用于支持能耗统计的设备",
+    "Use MQTT over WebSocket (port 443)": "使用基于 WebSocket 的 MQTT（端口 443）",
+    "Enable if port 8883 is blocked in your network": "如果您的网络屏蔽了 8883 端口，请启用"
+}
