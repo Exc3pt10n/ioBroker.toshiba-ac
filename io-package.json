@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "toshiba-ac",
-        "version": "0.2.0",
+        "version": "0.2.1",
         "news": {
+            "0.2.1": {
+                "en": "Maintenance release: first release published to npm by the release pipeline (with provenance), no functional changes",
+                "de": "Wartungsversion: erste Veröffentlichung auf npm über die Release-Pipeline (mit Provenance), keine funktionalen Änderungen",
+                "ru": "Сервисный выпуск: первая публикация в npm через конвейер выпуска (с provenance), без функциональных изменений",
+                "pt": "Versão de manutenção: primeira publicação no npm através do pipeline de lançamento (com provenance), sem alterações funcionais",
+                "nl": "Onderhoudsrelease: eerste publicatie op npm via de release-pipeline (met provenance), geen functionele wijzigingen",
+                "fr": "Version de maintenance : première publication sur npm par le pipeline de publication (avec provenance), aucune modification fonctionnelle",
+                "it": "Versione di manutenzione: prima pubblicazione su npm tramite la pipeline di rilascio (con provenance), nessuna modifica funzionale",
+                "es": "Versión de mantenimiento: primera publicación en npm mediante la canalización de publicación (con provenance), sin cambios funcionales",
+                "pl": "Wydanie serwisowe: pierwsza publikacja w npm przez potok wydań (z provenance), bez zmian funkcjonalnych",
+                "uk": "Сервісний випуск: перша публікація в npm через конвеєр випусків (з provenance), без функціональних змін",
+                "zh-cn": "维护版本：首次通过发布流水线发布到 npm（带 provenance），无功能变更"
+            },
             "0.2.0": {
                 "en": "Available on npm instead of GitHub (Breaking for installations from GitHub: install from npm). English documentation, settings in all languages, adapter review findings fixed",
                 "de": "Auf npm statt GitHub verfügbar (Breaking für Installationen aus GitHub: von npm installieren). Englische Dokumentation, Einstellungen in allen Sprachen, Funde aus dem Adapter-Review behoben",

@@ -114,6 +114,10 @@ See [DEVELOPMENT.md](DEVELOPMENT.md).
     ### **WORK IN PROGRESS**
 -->
 
+### 0.2.1 (2026-11-25)
+
+- (Exc3pt10n) Maintenance release: first release that is published to npm by the release pipeline (trusted publishing with provenance). No functional changes
+
 ### 0.2.0 (2026-11-25)
 
 - (Exc3pt10n) Published on npm. **Breaking** for testers who installed from GitHub (`…/tarball/main` or `…/tarball/release`): installing from GitHub is no longer possible, install the adapter from npm / the Admin interface instead
