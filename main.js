@@ -322,12 +322,13 @@ class ToshibaAc extends utils.Adapter {
     /**
      * Timer functions of the adapter for the library classes, so no timer keeps running after unload.
      *
-     * @returns {{setTimeout: Function, clearTimeout: Function}}
+     * @returns {{setTimeout: Function, clearTimeout: Function, delay: Function}}
      */
     adapterTimers() {
         return {
             setTimeout: (fn, ms) => this.setTimeout(fn, ms),
             clearTimeout: t => this.clearTimeout(t),
+            delay: ms => this.delay(ms),
         };
     }
 
@@ -400,7 +401,7 @@ class ToshibaAc extends utils.Adapter {
             group: ['Group in app', ac.groupName],
         };
         for (const [key, [name, val]] of Object.entries(info)) {
-            await this.createState(`${id}.info.${key}`, {
+            await this.ensureState(`${id}.info.${key}`, {
                 name,
                 type: 'string',
                 role: 'text',
@@ -409,28 +410,28 @@ class ToshibaAc extends utils.Adapter {
             });
             await this.setStateAsync(`${id}.info.${key}`, val === undefined || val === null ? '' : String(val), true);
         }
-        await this.createState(`${id}.info.indoorUnitModel`, {
+        await this.ensureState(`${id}.info.indoorUnitModel`, {
             name: 'Indoor unit model',
             type: 'string',
             role: 'text',
             read: true,
             write: false,
         });
-        await this.createState(`${id}.info.outdoorUnitModel`, {
+        await this.ensureState(`${id}.info.outdoorUnitModel`, {
             name: 'Outdoor unit model',
             type: 'string',
             role: 'text',
             read: true,
             write: false,
         });
-        await this.createState(`${id}.info.rawState`, {
+        await this.ensureState(`${id}.info.rawState`, {
             name: 'Raw state (hex)',
             type: 'string',
             role: 'text',
             read: true,
             write: false,
         });
-        await this.createState(`${id}.info.lastUpdate`, {
+        await this.ensureState(`${id}.info.lastUpdate`, {
             name: 'Last update',
             type: 'number',
             role: 'value.time',
@@ -438,14 +439,14 @@ class ToshibaAc extends utils.Adapter {
             write: false,
         });
 
-        await this.createState(`${id}.power`, {
+        await this.ensureState(`${id}.power`, {
             name: 'Power',
             type: 'boolean',
             role: 'switch.power',
             read: true,
             write: true,
         });
-        await this.createState(`${id}.targetTemperature`, {
+        await this.ensureState(`${id}.targetTemperature`, {
             name: 'Target temperature',
             type: 'number',
             role: 'level.temperature',
@@ -456,7 +457,7 @@ class ToshibaAc extends utils.Adapter {
             read: true,
             write: true,
         });
-        await this.createState(`${id}.indoorTemperature`, {
+        await this.ensureState(`${id}.indoorTemperature`, {
             name: 'Indoor temperature',
             type: 'number',
             role: 'value.temperature',
@@ -464,7 +465,7 @@ class ToshibaAc extends utils.Adapter {
             read: true,
             write: false,
         });
-        await this.createState(`${id}.outdoorTemperature`, {
+        await this.ensureState(`${id}.outdoorTemperature`, {
             name: 'Outdoor temperature',
             type: 'number',
             role: 'value.temperature',
@@ -486,7 +487,7 @@ class ToshibaAc extends utils.Adapter {
                     states[v] = LABELS[def.field][v] || v;
                 }
             }
-            await this.createState(`${id}.${key}`, {
+            await this.ensureState(`${id}.${key}`, {
                 name: def.name,
                 type: key === 'mode' ? 'number' : 'string',
                 role: key === 'mode' ? 'level.mode.airconditioner' : 'text',
@@ -496,7 +497,7 @@ class ToshibaAc extends utils.Adapter {
             });
         }
         if (features.airPureIon) {
-            await this.createState(`${id}.airPureIon`, {
+            await this.ensureState(`${id}.airPureIon`, {
                 name: 'Air purifier (Plasma ion)',
                 type: 'boolean',
                 role: 'switch',
@@ -504,7 +505,7 @@ class ToshibaAc extends utils.Adapter {
                 write: true,
             });
         }
-        await this.createState(`${id}.selfCleaning`, {
+        await this.ensureState(`${id}.selfCleaning`, {
             name: 'Self cleaning active',
             type: 'boolean',
             role: 'indicator',
@@ -512,7 +513,7 @@ class ToshibaAc extends utils.Adapter {
             write: false,
         });
         if (features.energyReport) {
-            await this.createState(`${id}.energyConsumptionYear`, {
+            await this.ensureState(`${id}.energyConsumptionYear`, {
                 name: 'Energy consumption (current year)',
                 type: 'number',
                 role: 'value.energy.consumed',
@@ -544,7 +545,7 @@ class ToshibaAc extends utils.Adapter {
         await this.delObjectAsync(id);
     }
 
-    async createState(id, common) {
+    async ensureState(id, common) {
         await this.extendObjectAsync(id, { type: 'state', common, native: {} });
     }
 

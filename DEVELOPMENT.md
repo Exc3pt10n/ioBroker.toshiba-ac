@@ -22,7 +22,7 @@ Plain JavaScript adapter without a build step: `main.js` and `lib/` are shipped 
 | `lib/iotHub.js` | Azure IoT Hub connection (MQTT): real-time updates and commands |
 | `lib/fcuState.js` | Encoding/decoding of the 19-byte unit state |
 | `lib/features.js` | Supported features per unit (`MeritFeature`, model id) |
-| `admin/jsonConfig.json` | Instance settings (all 11 ioBroker languages) |
+| `admin/jsonConfig.json`, `admin/i18n/*.json` | Instance settings; texts are translated in `admin/i18n/<lang>.json` (all 11 ioBroker languages) |
 
 ## Versioning
 
@@ -120,4 +120,4 @@ README (requirements) together.
 ## Language
 
 Code, log messages, object names and documentation are in English. Texts in `io-package.json`
-(`titleLang`, `desc`, `news`) and `admin/jsonConfig.json` need all 11 ioBroker languages.
+(`titleLang`, `desc`, `news`) and the admin translations in `admin/i18n/*.json` need all 11 ioBroker languages.
