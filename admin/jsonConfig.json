@@ -1,109 +1,226 @@
 {
-  "i18n": false,
-  "type": "panel",
-  "items": {
-    "header": {
-      "type": "header",
-      "text": {
-        "en": "Toshiba Home AC Control account",
-        "de": "Toshiba Home AC Control Konto"
-      },
-      "size": 4,
-      "sm": 12
-    },
-    "hint": {
-      "type": "staticText",
-      "text": {
-        "en": "Use the same e-mail / user name and password as in the 'Toshiba Home AC Control' app.",
-        "de": "Verwende dieselben Zugangsdaten (Benutzername / E-Mail und Passwort) wie in der App 'Toshiba Home AC Control'."
-      },
-      "newLine": true,
-      "sm": 12
-    },
-    "username": {
-      "type": "text",
-      "label": {
-        "en": "User name",
-        "de": "Benutzername"
-      },
-      "newLine": true,
-      "xs": 12,
-      "sm": 12,
-      "md": 6,
-      "lg": 4
-    },
-    "password": {
-      "type": "password",
-      "label": {
-        "en": "Password",
-        "de": "Passwort"
-      },
-      "repeat": false,
-      "visible": true,
-      "xs": 12,
-      "sm": 12,
-      "md": 6,
-      "lg": 4
-    },
-    "header2": {
-      "type": "header",
-      "text": {
-        "en": "Options",
-        "de": "Optionen"
-      },
-      "size": 4,
-      "newLine": true,
-      "sm": 12
-    },
-    "pollInterval": {
-      "type": "number",
-      "label": {
-        "en": "State refresh interval (minutes)",
-        "de": "Intervall Zustandsabfrage (Minuten)"
-      },
-      "help": {
-        "en": "Changes are pushed in real time. Polling is only a fallback.",
-        "de": "Änderungen kommen in Echtzeit. Die Abfrage dient nur als Rückfallebene."
-      },
-      "min": 1,
-      "max": 1440,
-      "newLine": true,
-      "xs": 12,
-      "sm": 6,
-      "md": 4,
-      "lg": 3
-    },
-    "energyInterval": {
-      "type": "number",
-      "label": {
-        "en": "Energy consumption refresh (minutes)",
-        "de": "Intervall Energieverbrauch (Minuten)"
-      },
-      "help": {
-        "en": "Only for units supporting energy reporting",
-        "de": "Nur bei Geräten mit Verbrauchsmessung"
-      },
-      "min": 5,
-      "max": 1440,
-      "xs": 12,
-      "sm": 6,
-      "md": 4,
-      "lg": 3
-    },
-    "useWebsocket": {
-      "type": "checkbox",
-      "label": {
-        "en": "Use MQTT over WebSocket (port 443)",
-        "de": "MQTT über WebSocket nutzen (Port 443)"
-      },
-      "help": {
-        "en": "Enable if port 8883 is blocked in your network",
-        "de": "Aktivieren, wenn Port 8883 in deinem Netz blockiert ist"
-      },
-      "newLine": true,
-      "xs": 12,
-      "sm": 12,
-      "md": 6
+    "i18n": false,
+    "type": "panel",
+    "items": {
+        "header": {
+            "type": "header",
+            "text": {
+                "en": "Toshiba Home AC Control account",
+                "de": "Toshiba Home AC Control Konto",
+                "ru": "Учётная запись Toshiba Home AC Control",
+                "pt": "Conta Toshiba Home AC Control",
+                "nl": "Toshiba Home AC Control-account",
+                "fr": "Compte Toshiba Home AC Control",
+                "it": "Account Toshiba Home AC Control",
+                "es": "Cuenta de Toshiba Home AC Control",
+                "pl": "Konto Toshiba Home AC Control",
+                "uk": "Обліковий запис Toshiba Home AC Control",
+                "zh-cn": "Toshiba Home AC Control 账户"
+            },
+            "size": 4,
+            "sm": 12,
+            "xs": 12,
+            "md": 12,
+            "lg": 12,
+            "xl": 12
+        },
+        "hint": {
+            "type": "staticText",
+            "text": {
+                "en": "Use the same e-mail / user name and password as in the 'Toshiba Home AC Control' app.",
+                "de": "Verwende dieselben Zugangsdaten (Benutzername / E-Mail und Passwort) wie in der App 'Toshiba Home AC Control'.",
+                "ru": "Используйте те же e-mail / имя пользователя и пароль, что и в приложении 'Toshiba Home AC Control'.",
+                "pt": "Utilize o mesmo e-mail / nome de utilizador e palavra-passe que na aplicação 'Toshiba Home AC Control'.",
+                "nl": "Gebruik hetzelfde e-mailadres / dezelfde gebruikersnaam en hetzelfde wachtwoord als in de app 'Toshiba Home AC Control'.",
+                "fr": "Utilisez la même adresse e-mail / le même nom d'utilisateur et le même mot de passe que dans l'application 'Toshiba Home AC Control'.",
+                "it": "Usa la stessa e-mail / nome utente e password dell'app 'Toshiba Home AC Control'.",
+                "es": "Utiliza el mismo correo / nombre de usuario y contraseña que en la aplicación 'Toshiba Home AC Control'.",
+                "pl": "Użyj tego samego e-maila / nazwy użytkownika i hasła co w aplikacji 'Toshiba Home AC Control'.",
+                "uk": "Використовуйте ті самі e-mail / ім'я користувача та пароль, що й у застосунку 'Toshiba Home AC Control'.",
+                "zh-cn": "请使用与 'Toshiba Home AC Control' 应用相同的电子邮件 / 用户名和密码。"
+            },
+            "newLine": true,
+            "sm": 12,
+            "xs": 12,
+            "md": 12,
+            "lg": 12,
+            "xl": 12
+        },
+        "username": {
+            "type": "text",
+            "label": {
+                "en": "User name",
+                "de": "Benutzername",
+                "ru": "Имя пользователя",
+                "pt": "Nome de utilizador",
+                "nl": "Gebruikersnaam",
+                "fr": "Nom d'utilisateur",
+                "it": "Nome utente",
+                "es": "Nombre de usuario",
+                "pl": "Nazwa użytkownika",
+                "uk": "Ім'я користувача",
+                "zh-cn": "用户名"
+            },
+            "newLine": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 4,
+            "xl": 4
+        },
+        "password": {
+            "type": "password",
+            "label": {
+                "en": "Password",
+                "de": "Passwort",
+                "ru": "Пароль",
+                "pt": "Palavra-passe",
+                "nl": "Wachtwoord",
+                "fr": "Mot de passe",
+                "it": "Password",
+                "es": "Contraseña",
+                "pl": "Hasło",
+                "uk": "Пароль",
+                "zh-cn": "密码"
+            },
+            "repeat": false,
+            "visible": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 4,
+            "xl": 4
+        },
+        "header2": {
+            "type": "header",
+            "text": {
+                "en": "Options",
+                "de": "Optionen",
+                "ru": "Параметры",
+                "pt": "Opções",
+                "nl": "Opties",
+                "fr": "Options",
+                "it": "Opzioni",
+                "es": "Opciones",
+                "pl": "Opcje",
+                "uk": "Параметри",
+                "zh-cn": "选项"
+            },
+            "size": 4,
+            "newLine": true,
+            "sm": 12,
+            "xs": 12,
+            "md": 12,
+            "lg": 12,
+            "xl": 12
+        },
+        "pollInterval": {
+            "type": "number",
+            "label": {
+                "en": "State refresh interval (minutes)",
+                "de": "Intervall Zustandsabfrage (Minuten)",
+                "ru": "Интервал обновления состояния (минуты)",
+                "pt": "Intervalo de atualização do estado (minutos)",
+                "nl": "Interval statusupdate (minuten)",
+                "fr": "Intervalle d'actualisation de l'état (minutes)",
+                "it": "Intervallo di aggiornamento dello stato (minuti)",
+                "es": "Intervalo de actualización del estado (minutos)",
+                "pl": "Interwał odświeżania stanu (minuty)",
+                "uk": "Інтервал оновлення стану (хвилини)",
+                "zh-cn": "状态刷新间隔（分钟）"
+            },
+            "help": {
+                "en": "Changes are pushed in real time. Polling is only a fallback.",
+                "de": "Änderungen kommen in Echtzeit. Die Abfrage dient nur als Rückfallebene.",
+                "ru": "Изменения передаются в реальном времени. Опрос нужен только как резерв.",
+                "pt": "As alterações são enviadas em tempo real. A consulta serve apenas de reserva.",
+                "nl": "Wijzigingen komen in realtime binnen. Opvragen is alleen een terugvaloptie.",
+                "fr": "Les changements sont transmis en temps réel. L'interrogation n'est qu'une solution de repli.",
+                "it": "Le modifiche arrivano in tempo reale. L'interrogazione serve solo come riserva.",
+                "es": "Los cambios llegan en tiempo real. La consulta es solo una alternativa de respaldo.",
+                "pl": "Zmiany są przesyłane w czasie rzeczywistym. Odpytywanie służy tylko jako rezerwa.",
+                "uk": "Зміни надходять у реальному часі. Опитування — лише резервний варіант.",
+                "zh-cn": "变更会实时推送。轮询仅作为后备。"
+            },
+            "min": 1,
+            "max": 1440,
+            "newLine": true,
+            "xs": 12,
+            "sm": 6,
+            "md": 4,
+            "lg": 3,
+            "xl": 3
+        },
+        "energyInterval": {
+            "type": "number",
+            "label": {
+                "en": "Energy consumption refresh (minutes)",
+                "de": "Intervall Energieverbrauch (Minuten)",
+                "ru": "Обновление энергопотребления (минуты)",
+                "pt": "Atualização do consumo de energia (minutos)",
+                "nl": "Interval energieverbruik (minuten)",
+                "fr": "Actualisation de la consommation d'énergie (minutes)",
+                "it": "Aggiornamento del consumo energetico (minuti)",
+                "es": "Actualización del consumo de energía (minutos)",
+                "pl": "Odświeżanie zużycia energii (minuty)",
+                "uk": "Оновлення енергоспоживання (хвилини)",
+                "zh-cn": "能耗刷新间隔（分钟）"
+            },
+            "help": {
+                "en": "Only for units supporting energy reporting",
+                "de": "Nur bei Geräten mit Verbrauchsmessung",
+                "ru": "Только для устройств с учётом энергопотребления",
+                "pt": "Apenas para unidades com medição de consumo",
+                "nl": "Alleen voor apparaten met verbruiksmeting",
+                "fr": "Uniquement pour les unités qui mesurent la consommation",
+                "it": "Solo per unità con misurazione dei consumi",
+                "es": "Solo para unidades con medición de consumo",
+                "pl": "Tylko dla urządzeń z pomiarem zużycia",
+                "uk": "Лише для пристроїв з обліком споживання",
+                "zh-cn": "仅适用于支持能耗统计的设备"
+            },
+            "min": 5,
+            "max": 1440,
+            "xs": 12,
+            "sm": 6,
+            "md": 4,
+            "lg": 3,
+            "xl": 3
+        },
+        "useWebsocket": {
+            "type": "checkbox",
+            "label": {
+                "en": "Use MQTT over WebSocket (port 443)",
+                "de": "MQTT über WebSocket nutzen (Port 443)",
+                "ru": "Использовать MQTT через WebSocket (порт 443)",
+                "pt": "Usar MQTT sobre WebSocket (porta 443)",
+                "nl": "MQTT via WebSocket gebruiken (poort 443)",
+                "fr": "Utiliser MQTT via WebSocket (port 443)",
+                "it": "Usa MQTT su WebSocket (porta 443)",
+                "es": "Usar MQTT sobre WebSocket (puerto 443)",
+                "pl": "Użyj MQTT przez WebSocket (port 443)",
+                "uk": "Використовувати MQTT через WebSocket (порт 443)",
+                "zh-cn": "使用基于 WebSocket 的 MQTT（端口 443）"
+            },
+            "help": {
+                "en": "Enable if port 8883 is blocked in your network",
+                "de": "Aktivieren, wenn Port 8883 in deinem Netz blockiert ist",
+                "ru": "Включите, если порт 8883 заблокирован в вашей сети",
+                "pt": "Ative se a porta 8883 estiver bloqueada na sua rede",
+                "nl": "Inschakelen als poort 8883 in je netwerk geblokkeerd is",
+                "fr": "Activez si le port 8883 est bloqué dans votre réseau",
+                "it": "Attiva se la porta 8883 è bloccata nella tua rete",
+                "es": "Actívalo si el puerto 8883 está bloqueado en tu red",
+                "pl": "Włącz, jeśli port 8883 jest zablokowany w Twojej sieci",
+                "uk": "Увімкніть, якщо порт 8883 заблоковано у вашій мережі",
+                "zh-cn": "如果您的网络屏蔽了 8883 端口，请启用"
+            },
+            "newLine": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "xl": 6,
+            "lg": 6
+        }
     }
-  }
 }

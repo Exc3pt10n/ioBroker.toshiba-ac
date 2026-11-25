@@ -1,0 +1,94 @@
+# Same layout as the ioBroker standard (check-and-lint, adapter-tests, deploy) so the repository checker
+# recognises it. Checks and releases come from the central workflow in Exc3pt10n/ioBroker-workflows:
+# lint, tests, integration and installation test, npm audit, release-guard and, after a merge to main,
+# the release (tag, GitHub release with .tgz); "deploy" then publishes this package to npm.
+name: Test and Release
+
+on:
+    push:
+        branches: [main]
+        # The release job sets tags itself; a manually pushed tag only starts the checks,
+        # releases are made from main exclusively
+        tags:
+            # normal versions
+            - 'v[0-9]+.[0-9]+.[0-9]+'
+            # pre-releases
+            - 'v[0-9]+.[0-9]+.[0-9]+-**'
+    pull_request: {}
+    schedule:
+        # Weekly with the full matrix (Linux + Windows, Node 22/24/26)
+        - cron: '23 3 * * 1'
+    workflow_dispatch:
+
+# A new push to the same branch cancels the older run (ioBroker standard). If this hits a release on main
+# after the tag was set: start the workflow again via "Run workflow", it completes the release.
+concurrency:
+    group: ${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+jobs:
+    # ioBroker standard check: lint and package tests (npm run test:package)
+    check-and-lint:
+        if: contains(github.event.head_commit.message, '[skip ci]') == false
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        steps:
+            - uses: ioBroker/testing-action-check@v2
+              with:
+                  node-version: 22.x
+                  lint: true
+
+    # Central workflow: tests on Node 22/24, integration and installation test, npm audit, release-guard
+    # and, after a merge to main, the release (tag, GitHub release with .tgz).
+    # Required checks in the branch protection: "adapter / ci-result" and "check-and-lint"
+    adapter:
+        uses: Exc3pt10n/ioBroker-workflows/.github/workflows/adapter.yml@v1
+        # Only the release job needs write access (tag, GitHub release)
+        permissions:
+            contents: write
+        # Optional token for pushing the tag, so the version tag starts its own run (repository checker E3032).
+        # Fine-grained PAT for this repository only with "Contents: Read and write"
+        secrets:
+            release-token: ${{ secrets.RELEASE_TOKEN }}
+        with:
+            default-branch: main
+            # Plain JavaScript adapter, no build step
+            build: false
+            # The .tgz attached to the GitHub release is exactly the package published to npm
+            prebuilt-package: true
+            # Distribution via npm: no "prepare", common.nogit, at most 7 news entries
+            npm-package: true
+            # No "release" branch anymore: installation is done from npm
+            release-branch: ''
+
+    # Unit and integration tests with the official ioBroker action
+    adapter-tests:
+        needs: check-and-lint
+        if: contains(github.event.head_commit.message, '[skip ci]') == false
+        runs-on: ${{ matrix.os }}
+        timeout-minutes: 20
+        strategy:
+            fail-fast: false
+            matrix:
+                node-version: [22.x, 24.x, 26.x]
+                os: [ubuntu-latest, windows-latest, macos-latest]
+        steps:
+            # Version tag instead of a commit id, as required by the repository checker for ioBroker actions
+            - uses: ioBroker/testing-action-adapter@v1
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  os: ${{ matrix.os }}
+
+    # After a release: publish the package from the GitHub release to npm (trusted publishing, no token)
+    deploy:
+        needs: [check-and-lint, adapter, adapter-tests]
+        if: needs.adapter.outputs.released == 'true'
+        uses: Exc3pt10n/ioBroker-workflows/.github/workflows/npm-publish.yml@v1
+        permissions:
+            contents: read
+            id-token: write
+        with:
+            version: ${{ needs.adapter.outputs.version }}

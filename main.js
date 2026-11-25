@@ -14,7 +14,6 @@ const { FcuState } = require('./lib/fcuState');
 const { getFeatures, meritAAllowedInMode, meritBAllowedInMode } = require('./lib/features');
 
 const LABELS = {
-    mode: { AUTO: 'Auto', COOL: 'Cool', HEAT: 'Heat', DRY: 'Dry', FAN: 'Fan only' },
     fanMode: {
         AUTO: 'Auto',
         QUIET: 'Quiet',
@@ -51,22 +50,62 @@ const LABELS = {
 };
 
 /** Writable select-type states: state id -> FcuState field and feature list */
+/**
+ * Numeric values of the operating mode (role level.mode.airconditioner). The state names follow
+ * the ioBroker role description (AUTO, COOL, HEAT, DRY, FAN_ONLY).
+ */
+const MODE_VALUES = { AUTO: 1, COOL: 2, HEAT: 3, DRY: 4, FAN: 5 };
+const MODE_STATE_NAMES = { AUTO: 'AUTO', COOL: 'COOL', HEAT: 'HEAT', DRY: 'DRY', FAN: 'FAN_ONLY' };
+
+/**
+ * Converts a written mode value (number, or for convenience a name like "HEAT" / "FAN_ONLY")
+ * into the internal mode name.
+ *
+ * @param {unknown} val
+ * @returns {string | undefined}
+ */
+function modeFromValue(val) {
+    const num = Number(val);
+    if (typeof val !== 'boolean' && val !== '' && Number.isFinite(num)) {
+        return Object.keys(MODE_VALUES).find(k => MODE_VALUES[k] === num);
+    }
+    const name = String(val).toUpperCase();
+    return Object.keys(MODE_STATE_NAMES).find(k => k === name || MODE_STATE_NAMES[k] === name);
+}
+
 const SELECT_STATES = {
-    mode: { field: 'mode', feature: 'modes', name: { en: 'Operating mode', de: 'Betriebsart' } },
-    fanMode: { field: 'fanMode', feature: 'fanModes', name: { en: 'Fan speed', de: 'Lüfterstufe' } },
-    swingMode: { field: 'swingMode', feature: 'swingModes', name: { en: 'Louver / swing', de: 'Lamellen / Swing' } },
+    mode: { field: 'mode', feature: 'modes', name: 'Operating mode' },
+    fanMode: { field: 'fanMode', feature: 'fanModes', name: 'Fan speed' },
+    swingMode: { field: 'swingMode', feature: 'swingModes', name: 'Louver / swing' },
     powerSelection: {
         field: 'powerSelection',
         feature: 'powerSelections',
-        name: { en: 'Power limit', de: 'Leistungsbegrenzung' },
+        name: 'Power limit',
     },
     meritA: {
         field: 'meritA',
         feature: 'meritA',
-        name: { en: 'Special mode (Eco, Hi-Power, 8 °C, ...)', de: 'Sonderfunktion (Eco, Hi-Power, 8 °C, ...)' },
+        name: 'Special mode (Eco, Hi-Power, 8 °C, ...)',
     },
-    meritB: { field: 'meritB', feature: 'meritB', name: { en: 'Fireplace mode', de: 'Kaminmodus' } },
+    meritB: { field: 'meritB', feature: 'meritB', name: 'Fireplace mode' },
 };
+
+/** Upper limit for configurable intervals: 1 day (setInterval accepts at most 2,147,483,647 ms) */
+const MAX_INTERVAL_MINUTES = 1440;
+
+/**
+ * Validates a configurable interval in minutes.
+ *
+ * @param {unknown} value configured value
+ * @param {number} min lower limit in minutes
+ * @param {number} fallback value used if the setting is missing or invalid
+ * @returns {number} minutes between min and MAX_INTERVAL_MINUTES
+ */
+function clampMinutes(value, min, fallback) {
+    const n = Number(value);
+    const minutes = Number.isFinite(n) && n > 0 ? Math.round(n) : fallback;
+    return Math.min(MAX_INTERVAL_MINUTES, Math.max(min, minutes));
+}
 
 const CONFIRM_TIMEOUT_MS = 15000;
 const INITIAL_POLL_DELAY_MS = 30000;
@@ -151,7 +190,13 @@ class ToshibaAc extends utils.Adapter {
         // ids in the form "<username>_<16 hex digits>" (otherwise "Invalid Inputs").
         const deviceId = `${this.config.username}_${await this.getClientId()}`;
 
-        this.http = new ToshibaHttpApi(this.config.username, this.config.password, this.log, deviceId);
+        this.http = new ToshibaHttpApi(
+            this.config.username,
+            this.config.password,
+            this.log,
+            deviceId,
+            this.adapterTimers(),
+        );
         await this.http.login();
         this.log.info('Logged in to Toshiba Home AC Control cloud');
 
@@ -167,6 +212,7 @@ class ToshibaAc extends utils.Adapter {
             deviceId,
             useWebsocket: !!this.config.useWebsocket,
             log: this.log,
+            timers: this.adapterTimers(),
             getSasToken: () => this.getSasToken(deviceId),
         });
         this.iot.on('command', msg =>
@@ -184,11 +230,11 @@ class ToshibaAc extends utils.Adapter {
             this.loadModelInfo();
         }, INITIAL_POLL_DELAY_MS);
 
-        const pollMinutes = Math.max(1, Number(this.config.pollInterval) || 10);
+        const pollMinutes = clampMinutes(this.config.pollInterval, 1, 10);
         this.pollTimer = this.setInterval(() => this.pollAll(), pollMinutes * 60000);
 
         if ([...this.devices.values()].some(d => d.features.energyReport)) {
-            const energyMinutes = Math.max(5, Number(this.config.energyInterval) || 30);
+            const energyMinutes = clampMinutes(this.config.energyInterval, 5, 30);
             this.initialEnergyTimer = this.setTimeout(() => {
                 this.initialEnergyTimer = null;
                 this.updateEnergy();
@@ -273,6 +319,18 @@ class ToshibaAc extends utils.Adapter {
         return token;
     }
 
+    /**
+     * Timer functions of the adapter for the library classes, so no timer keeps running after unload.
+     *
+     * @returns {{setTimeout: Function, clearTimeout: Function}}
+     */
+    adapterTimers() {
+        return {
+            setTimeout: (fn, ms) => this.setTimeout(fn, ms),
+            clearTimeout: t => this.clearTimeout(t),
+        };
+    }
+
     /** Stable random id of this adapter instance used to register at the cloud. */
     async getClientId() {
         const state = await this.getStateAsync('info.clientId');
@@ -292,7 +350,11 @@ class ToshibaAc extends utils.Adapter {
         if (!base) {
             base = String(ac.uniqueId).replace(this.FORBIDDEN_CHARS, '_').replace(/\./g, '_');
         }
-        if (this.idToUnique.has(base) && this.idToUnique.get(base) !== ac.uniqueId) {
+        // IDs that differ only in casing would collide on case-insensitive systems
+        const taken = [...this.idToUnique.entries()].some(
+            ([id, uniqueId]) => id.toLowerCase() === base.toLowerCase() && uniqueId !== ac.uniqueId,
+        );
+        if (taken) {
             base = `${base}_${String(ac.uniqueId)
                 .replace(/[^0-9a-zA-Z]/g, '')
                 .slice(0, 8)}`;
@@ -324,18 +386,18 @@ class ToshibaAc extends utils.Adapter {
         });
         await this.extendObjectAsync(`${id}.info`, {
             type: 'channel',
-            common: { name: { en: 'Device information', de: 'Geräteinformationen' } },
+            common: { name: 'Device information' },
             native: {},
         });
 
         const info = {
-            name: [{ en: 'Name', de: 'Name' }, ac.name],
-            acId: [{ en: 'AC id', de: 'AC-ID' }, ac.acId],
-            uniqueId: [{ en: 'Unique device id', de: 'Eindeutige Geräte-ID' }, ac.uniqueId],
-            firmware: [{ en: 'Firmware version', de: 'Firmware-Version' }, ac.firmware],
-            modelId: [{ en: 'Model id', de: 'Modell-ID' }, ac.modelId],
-            meritFeature: [{ en: 'Feature flags', de: 'Funktions-Flags' }, ac.meritFeature],
-            group: [{ en: 'Group in app', de: 'Gruppe in der App' }, ac.groupName],
+            name: ['Name', ac.name],
+            acId: ['AC id', ac.acId],
+            uniqueId: ['Unique device id', ac.uniqueId],
+            firmware: ['Firmware version', ac.firmware],
+            modelId: ['Model id', ac.modelId],
+            meritFeature: ['Feature flags', ac.meritFeature],
+            group: ['Group in app', ac.groupName],
         };
         for (const [key, [name, val]] of Object.entries(info)) {
             await this.createState(`${id}.info.${key}`, {
@@ -348,28 +410,28 @@ class ToshibaAc extends utils.Adapter {
             await this.setStateAsync(`${id}.info.${key}`, val === undefined || val === null ? '' : String(val), true);
         }
         await this.createState(`${id}.info.indoorUnitModel`, {
-            name: { en: 'Indoor unit model', de: 'Modell Innengerät' },
+            name: 'Indoor unit model',
             type: 'string',
             role: 'text',
             read: true,
             write: false,
         });
         await this.createState(`${id}.info.outdoorUnitModel`, {
-            name: { en: 'Outdoor unit model', de: 'Modell Außengerät' },
+            name: 'Outdoor unit model',
             type: 'string',
             role: 'text',
             read: true,
             write: false,
         });
         await this.createState(`${id}.info.rawState`, {
-            name: { en: 'Raw state (hex)', de: 'Rohzustand (hex)' },
+            name: 'Raw state (hex)',
             type: 'string',
             role: 'text',
             read: true,
             write: false,
         });
         await this.createState(`${id}.info.lastUpdate`, {
-            name: { en: 'Last update', de: 'Letzte Aktualisierung' },
+            name: 'Last update',
             type: 'number',
             role: 'value.time',
             read: true,
@@ -377,14 +439,14 @@ class ToshibaAc extends utils.Adapter {
         });
 
         await this.createState(`${id}.power`, {
-            name: { en: 'Power', de: 'Ein/Aus' },
+            name: 'Power',
             type: 'boolean',
             role: 'switch.power',
             read: true,
             write: true,
         });
         await this.createState(`${id}.targetTemperature`, {
-            name: { en: 'Target temperature', de: 'Solltemperatur' },
+            name: 'Target temperature',
             type: 'number',
             role: 'level.temperature',
             unit: '°C',
@@ -395,7 +457,7 @@ class ToshibaAc extends utils.Adapter {
             write: true,
         });
         await this.createState(`${id}.indoorTemperature`, {
-            name: { en: 'Indoor temperature', de: 'Raumtemperatur' },
+            name: 'Indoor temperature',
             type: 'number',
             role: 'value.temperature',
             unit: '°C',
@@ -403,7 +465,7 @@ class ToshibaAc extends utils.Adapter {
             write: false,
         });
         await this.createState(`${id}.outdoorTemperature`, {
-            name: { en: 'Outdoor temperature', de: 'Außentemperatur' },
+            name: 'Outdoor temperature',
             type: 'number',
             role: 'value.temperature',
             unit: '°C',
@@ -413,17 +475,21 @@ class ToshibaAc extends utils.Adapter {
         for (const [key, def] of Object.entries(SELECT_STATES)) {
             const values = features[def.feature];
             if (key === 'meritB' && values.length <= 1) {
-                await this.delObjectAsync(`${id}.${key}`).catch(() => {});
+                await this.removeUnusedState(`${id}.${key}`);
                 continue;
             }
             const states = {};
             for (const v of values) {
-                states[v] = LABELS[def.field][v] || v;
+                if (key === 'mode') {
+                    states[MODE_VALUES[v]] = MODE_STATE_NAMES[v];
+                } else {
+                    states[v] = LABELS[def.field][v] || v;
+                }
             }
             await this.createState(`${id}.${key}`, {
                 name: def.name,
-                type: 'string',
-                role: key === 'mode' ? 'level.mode.thermostat' : 'text',
+                type: key === 'mode' ? 'number' : 'string',
+                role: key === 'mode' ? 'level.mode.airconditioner' : 'text',
                 states,
                 read: true,
                 write: true,
@@ -431,7 +497,7 @@ class ToshibaAc extends utils.Adapter {
         }
         if (features.airPureIon) {
             await this.createState(`${id}.airPureIon`, {
-                name: { en: 'Air purifier (Plasma ion)', de: 'Luftreinigung (Plasma-Ionisator)' },
+                name: 'Air purifier (Plasma ion)',
                 type: 'boolean',
                 role: 'switch',
                 read: true,
@@ -439,7 +505,7 @@ class ToshibaAc extends utils.Adapter {
             });
         }
         await this.createState(`${id}.selfCleaning`, {
-            name: { en: 'Self cleaning active', de: 'Selbstreinigung aktiv' },
+            name: 'Self cleaning active',
             type: 'boolean',
             role: 'indicator',
             read: true,
@@ -447,7 +513,7 @@ class ToshibaAc extends utils.Adapter {
         });
         if (features.energyReport) {
             await this.createState(`${id}.energyConsumptionYear`, {
-                name: { en: 'Energy consumption (current year)', de: 'Energieverbrauch (aktuelles Jahr)' },
+                name: 'Energy consumption (current year)',
                 type: 'number',
                 role: 'value.energy.consumed',
                 unit: 'Wh',
@@ -457,6 +523,25 @@ class ToshibaAc extends utils.Adapter {
         }
 
         await this.updateStates(device, ac.state);
+    }
+
+    /**
+     * Removes a state that the unit does not support. States with custom settings (history,
+     * databases, ...) are kept and only made read-only, so the user does not lose them.
+     *
+     * @param {string} id
+     */
+    async removeUnusedState(id) {
+        const obj = await this.getObjectAsync(id);
+        if (!obj) {
+            return;
+        }
+        if (obj.common && obj.common.custom && Object.keys(obj.common.custom).length) {
+            this.log.warn(`${id} is not supported by the unit but kept because it has custom settings`);
+            await this.extendObjectAsync(id, { common: { write: false } });
+            return;
+        }
+        await this.delObjectAsync(id);
     }
 
     async createState(id, common) {
@@ -492,7 +577,8 @@ class ToshibaAc extends utils.Adapter {
             if (key === 'meritB' && device.features.meritB.length <= 1) {
                 continue;
             }
-            await set(key, s.get(def.field));
+            const v = s.get(def.field);
+            await set(key, key === 'mode' && v !== null ? MODE_VALUES[v] : v);
         }
         if (device.features.airPureIon) {
             const ion = s.get('airPureIon');
@@ -717,9 +803,13 @@ class ToshibaAc extends utils.Adapter {
                 if (!def) {
                     return null;
                 }
-                const v = String(val).toUpperCase();
-                if (!f[def.feature].includes(v)) {
-                    throw new Error(`value not supported, allowed: ${f[def.feature].join(', ')}`);
+                const v = key === 'mode' ? modeFromValue(val) : String(val).toUpperCase();
+                if (!v || !f[def.feature].includes(v)) {
+                    const allowed =
+                        key === 'mode'
+                            ? f.modes.map(m => `${MODE_VALUES[m]} (${MODE_STATE_NAMES[m]})`)
+                            : f[def.feature];
+                    throw new Error(`value not supported, allowed: ${allowed.join(', ')}`);
                 }
                 if (key === 'meritA' && currentMode && !meritAAllowedInMode(v, currentMode)) {
                     throw new Error(`not available in mode ${currentMode}`);
