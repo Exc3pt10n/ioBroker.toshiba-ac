@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "toshiba-ac",
-        "version": "0.2.1",
+        "version": "0.2.2",
         "news": {
+            "0.2.2": {
+                "en": "Requests to the Toshiba cloud are paced with the adapter delay function; version tags now start their own workflow run",
+                "de": "Anfragen an die Toshiba-Cloud werden mit der Warte-Funktion des Adapters getaktet; Versions-Tags starten jetzt einen eigenen Workflow-Lauf",
+                "ru": "Запросы к облаку Toshiba выполняются с паузами через функцию ожидания адаптера; теги версий теперь запускают собственный запуск рабочего процесса",
+                "pt": "Os pedidos à nuvem Toshiba são espaçados com a função de espera do adaptador; as etiquetas de versão iniciam agora a sua própria execução do workflow",
+                "nl": "Verzoeken aan de Toshiba-cloud worden getimed met de wachtfunctie van de adapter; versietags starten nu een eigen workflow-run",
+                "fr": "Les requêtes vers le cloud Toshiba sont cadencées avec la fonction d'attente de l'adaptateur ; les tags de version lancent désormais leur propre exécution du workflow",
+                "it": "Le richieste al cloud Toshiba vengono distanziate con la funzione di attesa dell'adattatore; i tag di versione avviano ora una propria esecuzione del workflow",
+                "es": "Las solicitudes a la nube de Toshiba se espacian con la función de espera del adaptador; las etiquetas de versión inician ahora su propia ejecución del flujo de trabajo",
+                "pl": "Zapytania do chmury Toshiba są rozkładane w czasie funkcją oczekiwania adaptera; tagi wersji uruchamiają teraz własne uruchomienie workflow",
+                "uk": "Запити до хмари Toshiba виконуються з паузами через функцію очікування адаптера; теги версій тепер запускають власний запуск робочого процесу",
+                "zh-cn": "对 Toshiba 云的请求使用适配器的等待函数进行节流；版本标签现在会触发独立的工作流运行"
+            },
             "0.2.1": {
                 "en": "Maintenance release: first release published to npm by the release pipeline (with provenance), no functional changes",
                 "de": "Wartungsversion: erste Veröffentlichung auf npm über die Release-Pipeline (mit Provenance), keine funktionalen Änderungen",
