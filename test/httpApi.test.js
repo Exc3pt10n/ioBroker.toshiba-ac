@@ -100,3 +100,15 @@ test('HTTP 429 is reported as rate limit', async () => {
     const api = new ToshibaHttpApi('user', 'pw', undefined, 'abc');
     await assert.rejects(api.login(), ToshibaRateLimitError);
 });
+
+test('requests are paced with the adapter delay function', async () => {
+    mockFetch(() => ({
+        body: { IsSuccess: true, ResObj: { access_token: 't', token_type: 'Bearer', consumerId: 'c' } },
+    }));
+    const waits = [];
+    const api = new ToshibaHttpApi('user', 'pw', undefined, 'id', { delay: async ms => waits.push(ms) });
+    await api.login();
+    await api.login();
+    assert.equal(waits.length, 1);
+    assert.ok(waits[0] > 0 && waits[0] <= 1500);
+});

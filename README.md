@@ -114,6 +114,11 @@ See [DEVELOPMENT.md](DEVELOPMENT.md).
     ### **WORK IN PROGRESS**
 -->
 
+### 0.2.2 (2026-11-27)
+
+- (Exc3pt10n) Requests to the Toshiba cloud are paced with the adapter's `delay()` function instead of an own wait function
+- (Exc3pt10n) Version tags now start their own workflow run (as required by the ioBroker repository checker)
+
 ### 0.2.1 (2026-11-25)
 
 - (Exc3pt10n) Maintenance release: first release that is published to npm by the release pipeline (trusted publishing with provenance). No functional changes
