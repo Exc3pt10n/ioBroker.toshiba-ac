@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "toshiba-ac",
-        "version": "0.2.2",
+        "version": "0.2.3",
         "news": {
+            "0.2.3": {
+                "en": "Maintenance release without functional changes (code cleanup for the ioBroker repository checker)",
+                "de": "Wartungsversion ohne funktionale Änderungen (Code-Bereinigung für den ioBroker-Repochecker)",
+                "ru": "Сервисный выпуск без функциональных изменений (очистка кода для проверки репозитория ioBroker)",
+                "pt": "Versão de manutenção sem alterações funcionais (limpeza de código para o verificador de repositório do ioBroker)",
+                "nl": "Onderhoudsrelease zonder functionele wijzigingen (code-opschoning voor de ioBroker-repositorychecker)",
+                "fr": "Version de maintenance sans modification fonctionnelle (nettoyage du code pour le vérificateur de dépôt ioBroker)",
+                "it": "Versione di manutenzione senza modifiche funzionali (pulizia del codice per il controllo del repository ioBroker)",
+                "es": "Versión de mantenimiento sin cambios funcionales (limpieza de código para el verificador de repositorios de ioBroker)",
+                "pl": "Wydanie serwisowe bez zmian funkcjonalnych (porządki w kodzie dla sprawdzarki repozytorium ioBroker)",
+                "uk": "Сервісний випуск без функціональних змін (очищення коду для перевірки репозиторію ioBroker)",
+                "zh-cn": "维护版本，无功能变更（为 ioBroker 仓库检查器清理代码）"
+            },
             "0.2.2": {
                 "en": "Requests to the Toshiba cloud are paced with the adapter delay function; version tags now start their own workflow run",
                 "de": "Anfragen an die Toshiba-Cloud werden mit der Warte-Funktion des Adapters getaktet; Versions-Tags starten jetzt einen eigenen Workflow-Lauf",
