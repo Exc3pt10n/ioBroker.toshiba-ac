@@ -114,6 +114,10 @@ See [DEVELOPMENT.md](DEVELOPMENT.md).
     ### **WORK IN PROGRESS**
 -->
 
+### 0.2.3 (2026-11-28)
+
+- (Exc3pt10n) Maintenance release without functional changes: a variable in the HTTP client was renamed because the ioBroker repository checker took it for an own wait function (W5051)
+
 ### 0.2.2 (2026-11-27)
 
 - (Exc3pt10n) Requests to the Toshiba cloud are paced with the adapter's `delay()` function instead of an own wait function
